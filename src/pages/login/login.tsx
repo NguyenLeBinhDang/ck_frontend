@@ -24,6 +24,9 @@ export default function Login() {
                 if (response.event == 'RE_LOGIN' && response.status == 'success') {
                     const relog_token = response.data.RE_LOGIN_CODE;
 
+                    localStorage.setItem('user', user);
+                    localStorage.setItem('token', relog_token);
+
                     dispatch(loginSuccess({user: user, token: relog_token}));
 
                     navigate('/chat');
