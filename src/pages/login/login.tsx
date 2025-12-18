@@ -1,6 +1,6 @@
 import './login.css';
 import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {data, Link, useNavigate} from "react-router-dom";
 import {useAppDispatch} from "../../redux/hooks";
 import {getSocket, sendData} from "../../services/socket";
 import {login} from "../../redux/userSlice";
@@ -8,6 +8,7 @@ import {login} from "../../redux/userSlice";
 export default function Login() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
+    const [error, setError] = useState('')
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -22,17 +23,23 @@ export default function Login() {
         socket.onmessage = (e) => {
             try {
                 const response = JSON.parse(e.data);
-                if (response.event === 'LOGIN' && response.status === 'success') {
-                    const re_login_code = response.data.RE_LOGIN_CODE;
-                    //save user and relogincode into localstorage
-                    localStorage.setItem('user', user);
-                    localStorage.setItem('re_login_code', re_login_code);
+                if (response.event === 'LOGIN') {
+                    if (response.status === 'success') {
+                        const re_login_code = response.data.RE_LOGIN_CODE;
 
-                    //update user and relogincode in store
-                    dispatch(login({user: user, token: re_login_code}));
+                        //save user and relogincode into localstorage
+                        localStorage.setItem('user', user);
+                        localStorage.setItem('re_login_code', re_login_code);
 
-                    //navigate to chat page
-                    navigate('/chat');
+                        //update user and relogincode in store
+                        dispatch(login({user: user, token: re_login_code}));
+
+                        //navigate to chat page
+                        navigate('/chat');
+                    } else {
+                        setError(response.mes);
+                    }
+
                 }
             } catch (error) {
                 console.log(error);
@@ -49,6 +56,7 @@ export default function Login() {
     //send login request
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
 
         const payload = {
             action: "onchat",
@@ -72,6 +80,9 @@ export default function Login() {
                             <div className="card-body p-5 text-center">
                                 <div className="mb-md-5 mt-md-4 pb-5">
                                     <h2 className="fw-bold mb-2 text-uppercase">Login</h2>
+
+                                    {error && <div className="alert alert-danger">{error}</div>}
+
                                     <p className="text-white-50 mb-5">Please enter your username and password!</p>
                                     <form onSubmit={handleLogin}>
                                         <div data-mdb-input-init className="form-outline form-white mb-4">
@@ -92,7 +103,7 @@ export default function Login() {
                                                    className="form-control form-control-lg"
                                                    value={pass}
                                                    onChange={(e) => setPass(e.target.value)}
-                                                   required
+                                                // required
                                             />
                                         </div>
                                         <p className="small mb-5 pb-lg-2"><a className="text-white-50" href="#!">Forgot
@@ -102,8 +113,8 @@ export default function Login() {
                                                 className="btn btn-outline-light btn-lg px-5" type="submit">Login
                                         </button>
 
-                                        <p className="small mb-5 pb-lg-2"><a className="text-white-50"
-                                                                             href="/regiser">Register?</a></p>
+                                        <p className="small mb-5 pb-lg-2"><Link className='text-white-50'
+                                                                                to='/register'>Register?</Link></p>
                                     </form>
                                 </div>
                             </div>

@@ -1,7 +1,7 @@
 import '../login/login.css'
 
 import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {getSocket, sendData} from "../../services/socket";
 
 export default function Register() {
@@ -20,10 +20,10 @@ export default function Register() {
             try {
                 const response = JSON.parse(event.data);
                 if (response.event === 'REGISTER') {
-                    if (response.statud === 'success') {
+                    if (response.status === 'success') {
                         alert("Tạo tài khoản thành công!");
                     } else {
-                        setError(response.message || "Đăng kí thất bại");
+                        setError(response.mes);
                     }
                 }
             } catch (e) {
@@ -66,7 +66,7 @@ export default function Register() {
                         <div className="card bg-dark text-white">
                             <div className="card-body p-5 text-center">
                                 <div className="mb-md-5 mt-md-4 pb-5">
-                                    <h2 className="fw-bold mb-2 text-uppercase">Login</h2>
+                                    <h2 className="fw-bold mb-2 text-uppercase">Register</h2>
                                     <p className="text-white-50 mb-5">Please enter your username and password!</p>
 
                                     {error && <div className="alert alert-danger">{error}</div>}
@@ -90,14 +90,14 @@ export default function Register() {
                                                    className="form-control form-control-lg"
                                                    value={pass}
                                                    onChange={(e) => setPass(e.target.value)}
-                                                   required
+                                                   // required
                                             />
                                         </div>
                                         <button data-mdb-button-init data-mdb-ripple-init
                                                 className="btn btn-outline-light btn-lg px-5" type="submit">Register
                                         </button>
-                                        <p className="small mb-5 pb-lg-2"><a className="text-white-50"
-                                                                             href="/login">Login?</a></p>
+                                        <p className="small mb-5 pb-lg-2"><Link className='text-white-50'
+                                                                                to='/login'>Login?</Link></p>
                                     </form>
                                 </div>
                             </div>
