@@ -1,6 +1,5 @@
-import {loginSuccess, logout} from "../redux/userSlice";
+import {login, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
-import {useAppDispatch} from "../redux/hooks";
 
 let socket: WebSocket | null = null;
 
@@ -32,39 +31,53 @@ export const connectWS = () => {
                     }
                 }
             }
-            // socket?.send(JSON.stringify(payload));
             sendData(payload)
         }
-
     }
 
     socket.onmessage = (e) => {
         try {
             const data = JSON.parse(e.data);
-            console.log('Received message from server');
+            console.log('Received message from server: ' + data);
             if (data.event === "RE_LOGIN") {
-                if (data.data && data.data.RE_LOGIN_TOKEN) {
+                if (data.status === "success") {
                     localStorage.setItem('token', data.data.RE_LOGIN_TOKEN);
                     const currUser = localStorage.getItem('user') || '';
-
-                    store.dispatch(loginSuccess({user: currUser, token: data.data.RE_LOGIN_TOKEN}))
+                    store.dispatch(login({user: currUser, token: data.data.RE_LOGIN_TOKEN}))
                 } else {
-                    throw new Error("Invalid login token");
+                    logoutWS();
                 }
             }
+
+            // if(data.event === "REGISTER"){
+            //
+            // }
+
         } catch (e) {
             console.log('Received message from server', e);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            store.dispatch(logout());
+
         }
     }
 
     socket.onclose = () => {
         console.log('Connection closed!');
     }
+}
 
+const logoutWS = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket?.send(JSON.stringify({
+            "action": "onchat",
+            "data": {
+                "event": "LOGOUT"
+            }
+        }));
+    }
+
+    store.dispatch(logout());
 }
 
 export const sendData = (data: any) => {

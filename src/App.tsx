@@ -3,6 +3,7 @@ import './App.css';
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Login from "./pages/login/login";
 import {connectWS} from "./services/socket";
+import Register from "./pages/register/register";
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Login/>}></Route>
                 <Route path="/login" element={<Login/>}></Route>
+                <Route path="/register" element={<Register/>}></Route>
             </Routes>
         </BrowserRouter>
     );

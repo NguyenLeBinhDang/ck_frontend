@@ -1,15 +1,13 @@
-import './login.css';
+import '../login/login.css'
+
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {useAppDispatch} from "../../redux/hooks";
 import {getSocket, sendData} from "../../services/socket";
-import {login} from "../../redux/userSlice";
 
-export default function Login() {
+export default function Register() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
+    const [error, setError] = useState('')
 
     useEffect(() => {
         const socket = getSocket();
@@ -18,52 +16,49 @@ export default function Login() {
             return;
         }
 
-        //on receiving message from server
-        socket.onmessage = (e) => {
+        socket.onmessage = (event) => {
             try {
-                const response = JSON.parse(e.data);
-                if (response.event === 'LOGIN' && response.status === 'success') {
-                    const re_login_code = response.data.RE_LOGIN_CODE;
-                    //save user and relogincode into localstorage
-                    localStorage.setItem('user', user);
-                    localStorage.setItem('re_login_code', re_login_code);
-
-                    //update user and relogincode in store
-                    dispatch(login({user: user, token: re_login_code}));
-
-                    //navigate to chat page
-                    navigate('/chat');
+                const response = JSON.parse(event.data);
+                if (response.event === 'REGISTER') {
+                    if (response.statud === 'success') {
+                        alert("Tạo tài khoản thành công!");
+                    } else {
+                        setError(response.message || "Đăng kí thất bại");
+                    }
                 }
-            } catch (error) {
-                console.log(error);
+            } catch (e) {
+                console.log(e);
             }
 
         }
-
         return () => {
             if (socket) socket.onmessage = null;
         }
 
-    }, [navigate, dispatch, user])
+    }, [])
 
-    //send login request
-    const handleLogin = (e: React.FormEvent) => {
+
+    const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
 
         const payload = {
             action: "onchat",
             data: {
-                event: "LOGIN",
+                event: "REGISTER",
                 data: {
                     "user": user,
                     "pass": pass
                 }
             }
         };
+
         sendData(payload);
-    };
+    }
 
     return (
+
+
         <section className="vh-100 gradient-custom">
             <div className="container py-5 h-100">
                 <div className="row d-flex justify-content-center align-items-center h-100">
@@ -73,7 +68,10 @@ export default function Login() {
                                 <div className="mb-md-5 mt-md-4 pb-5">
                                     <h2 className="fw-bold mb-2 text-uppercase">Login</h2>
                                     <p className="text-white-50 mb-5">Please enter your username and password!</p>
-                                    <form onSubmit={handleLogin}>
+
+                                    {error && <div className="alert alert-danger">{error}</div>}
+
+                                    <form onSubmit={handleRegister}>
                                         <div data-mdb-input-init className="form-outline form-white mb-4">
                                             <label className="form-label" htmlFor="typeUsernameX">Username</label>
                                             <input type="text"
@@ -95,15 +93,11 @@ export default function Login() {
                                                    required
                                             />
                                         </div>
-                                        <p className="small mb-5 pb-lg-2"><a className="text-white-50" href="#!">Forgot
-                                            password?</a></p>
-
                                         <button data-mdb-button-init data-mdb-ripple-init
-                                                className="btn btn-outline-light btn-lg px-5" type="submit">Login
+                                                className="btn btn-outline-light btn-lg px-5" type="submit">Register
                                         </button>
-
                                         <p className="small mb-5 pb-lg-2"><a className="text-white-50"
-                                                                             href="/regiser">Register?</a></p>
+                                                                             href="/login">Login?</a></p>
                                     </form>
                                 </div>
                             </div>
@@ -114,4 +108,3 @@ export default function Login() {
         </section>
     );
 }
-

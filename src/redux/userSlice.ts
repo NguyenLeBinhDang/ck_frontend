@@ -7,7 +7,7 @@ export interface UserState {
 }
 
 const getInitialState = (): UserState => {
-    const storedToken = localStorage.getItem("relog_token");
+    const storedToken = localStorage.getItem("re_login_code");
     const storedUser = localStorage.getItem("user");
 
     return {
@@ -23,7 +23,7 @@ export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        loginSuccess: (state, action: PayloadAction<{ user: string, token: string }>) => {
+        login: (state, action: PayloadAction<{ user: string, token: string }>) => {
             state.user = action.payload.user;
             state.token = action.payload.token;
             state.isAuthenticated = true;
@@ -37,5 +37,5 @@ export const userSlice = createSlice({
     }
 })
 
-export const {loginSuccess, logout} = userSlice.actions;
+export const {login, logout} = userSlice.actions;
 export default userSlice.reducer;
