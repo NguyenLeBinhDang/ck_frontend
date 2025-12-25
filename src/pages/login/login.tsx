@@ -1,6 +1,6 @@
 import './login.css';
 import {useEffect, useState} from "react";
-import {data, Link, useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useAppDispatch} from "../../redux/hooks";
 import {getSocket, sendData} from "../../services/socket";
 import {login} from "../../redux/userSlice";

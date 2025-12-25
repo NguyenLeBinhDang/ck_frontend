@@ -1,4 +1,4 @@
-import '../login/login.css'
+import './register.css'
 
 import {useEffect, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
@@ -90,7 +90,7 @@ export default function Register() {
                                                    className="form-control form-control-lg"
                                                    value={pass}
                                                    onChange={(e) => setPass(e.target.value)}
-                                                   // required
+                                                // required
                                             />
                                         </div>
                                         <button data-mdb-button-init data-mdb-ripple-init
