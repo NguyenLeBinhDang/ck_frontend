@@ -1,10 +1,10 @@
 import LeftSidebar from "../../components/LeftSidebar/LeftSidebar";
 import ChatWindow from "../../components/ChatWindow/ChatWindow";
-import "./chat.css";
+import styles from "./chat.module.css";
 
-export default function Chat() {
+export default function ChatLayout() {
     return (
-        <div className="chat-layout vh-100 d-flex">
+        <div className={styles.chatContainer}>
             <LeftSidebar/>
 
             <ChatWindow/>
