@@ -5,6 +5,7 @@ import EmojiPicker, {EmojiClickData} from "emoji-picker-react";
 import {useParams} from "react-router-dom";
 
 export default function ChatWindow() {
+
     const {id} = useParams();
     const [message, setMessage] = React.useState("");
     const [showPicker, setShowPicker] = React.useState(false);
@@ -46,7 +47,13 @@ export default function ChatWindow() {
     return (
         <div className={styles.windowContainer}>
             <div className={styles.messageArea}>
+                <div className={`${styles.messageBubble} ${styles.myMessage}`}>
+                    <p>ABCD</p>
+                </div>
 
+                <div className={`${styles.messageBubble} ${styles.theirMessage}`}>
+                    <p>ABCD</p>
+                </div>
             </div>
 
 
