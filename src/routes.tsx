@@ -1,8 +1,9 @@
 import {createBrowserRouter} from "react-router-dom";
 import Login from "./pages/login/login";
 import Register from "./pages/register/register";
-import Chat from "./pages/chat/chat";
 import ChatWindow from "./components/ChatWindow/ChatWindow";
+import ChatLayout from "./pages/chat/chatLayout";
+import ChatWelcome from "./components/ChatWindow/ChatWelcome";
 
 export const routes = createBrowserRouter([
     {
@@ -19,9 +20,17 @@ export const routes = createBrowserRouter([
     },
     {
         path: "/chat",
-        element: <Chat/>,
+        element: <ChatLayout/>,
         children: [
-            {index: true, element: <ChatWindow/>}
+            {
+                index: true,
+                element: <ChatWelcome/>
+
+            },
+            {
+                path: ":id",
+                element: <ChatWindow/>
+            }
         ]
     }
 

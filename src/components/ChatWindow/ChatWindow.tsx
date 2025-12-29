@@ -2,8 +2,10 @@ import React, {useEffect} from "react";
 import {BsEmojiSmile, BsImage, BsPaperclip, BsSend} from "react-icons/bs";
 import styles from "./ChatWindow.module.css";
 import EmojiPicker, {EmojiClickData} from "emoji-picker-react";
+import {useParams} from "react-router-dom";
 
 export default function ChatWindow() {
+    const {id} = useParams();
     const [message, setMessage] = React.useState("");
     const [showPicker, setShowPicker] = React.useState(false);
 
@@ -14,6 +16,12 @@ export default function ChatWindow() {
     const onEmojiClick = (emojiData: EmojiClickData) => {
         setMessage((prevMessage) => prevMessage + emojiData.emoji);
     }
+
+    useEffect(() => {
+        if (id) {
+            setMessage("")
+        }
+    }, [id]);
 
     useEffect(() => {
         const handleClickOut = (event: MouseEvent) => {

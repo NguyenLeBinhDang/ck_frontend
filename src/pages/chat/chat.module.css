@@ -5,3 +5,10 @@
     overflow: hidden;
     background-color: #fff;
 }
+
+.content{
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
