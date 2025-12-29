@@ -6,8 +6,8 @@ let socket: WebSocket | null = null;
 export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
 
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        console.log('Server connected!');
+    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
+        console.log('Socket is connecting or already connected.');
         return;
     }
 
