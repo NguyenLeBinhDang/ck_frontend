@@ -1,0 +1,131 @@
+/* Container chính */
+.card {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Khi active */
+.active {
+    z-index: 10;
+    margin: 2px;
+    border-radius: 12px;
+}
+
+/* Viền RGB chạy */
+.active::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(
+            45deg,
+            #ff0000,
+            #ff7300,
+            #fffb00,
+            #48ff00,
+            #00ffd5,
+            #002bff,
+            #7a00ff,
+            #ff00c8,
+            #ff0000
+    );
+    background-size: 400%;
+    animation: glowing-border 20s linear infinite;
+    filter: blur(2px);
+    z-index: -1;
+    border-radius: 14px;
+}
+
+/* Nội dung card */
+.content {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.card:hover .content {
+    background-color: #f5f5f5;
+}
+
+/* Avatar */
+.avatarWrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.onlineDot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #22c55e;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+/* Message info */
+.messageInfo {
+    margin-left: 12px;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time {
+    font-size: 10px;
+    color: #9ca3af;
+}
+
+/* Preview */
+.preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lastMessage {
+    font-size: 14px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Unread badge */
+.unreadBadge {
+    background-color: #ef4444;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+}
+
+/* Animation */
+@keyframes glowing-border {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+}
