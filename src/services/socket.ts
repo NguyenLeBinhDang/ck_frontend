@@ -4,10 +4,10 @@ import {store} from "../redux/store";
 let socket: WebSocket | null = null;
 
 export const connectWS = () => {
-    const url = process.env.REACT_APP_WS_URL || 'http://localhost:3000';
+    const url = process.env.REACT_APP_WS_URL;
 
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        console.log('Server connected!');
+    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
+        console.log('Socket is connecting or already connected.');
         return;
     }
 
@@ -17,9 +17,9 @@ export const connectWS = () => {
         console.log('Connected to server');
 
         const storedUsername = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
+        const storedReLoginCode = localStorage.getItem('re_login_code');
 
-        if (storedUsername && storedToken) {
+        if (storedUsername && storedReLoginCode) {
 
             const payload = {
                 action: "onchat",
@@ -27,7 +27,7 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
-                        token: storedToken,
+                        token: storedReLoginCode,
                     }
                 }
             }
@@ -65,7 +65,7 @@ export const connectWS = () => {
 }
 
 const logoutWS = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('re_login_code');
     localStorage.removeItem('user');
 
     if (socket && socket.readyState === WebSocket.OPEN) {
