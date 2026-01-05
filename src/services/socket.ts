@@ -1,6 +1,6 @@
 import {login, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
-import {receiveMessage, setConversations, setMessages} from "../redux/chatSlice";
+import {receiveMessage, setConversations, setMessages, updateUserStatus} from "../redux/chatSlice";
 
 let socket: WebSocket | null = null;
 
@@ -64,14 +64,24 @@ export const connectWS = () => {
                 case "GET_USER_LIST":
                     if(status === "success") {
                         store.dispatch(setConversations(data));
-                        //nữa sẽ duyệt qua mảng nếu là ng dùng thì check onl
+                        if(Array.isArray(data)){
+                            data.forEach(u => {
+                                if(u.type===0 && u.name  ){
+                                    checkUserOnline(u.name);
+                                }
+                            })
+                        }
                     }
                     break;
                 case "CHECK_USER_ONLINE":
-                    if (status === "success" && data.status) {
+                    if (status === "success" ) {
                         // kiểm tra tạm bằng console trước khi thay bằng redux
                         console.log(`User ${data.user} is online: ${data.status}`);
                         // Có thể dispatch action update status user ở đây
+                        store.dispatch(updateUserStatus({
+                            id: data.user, //api đặt là user
+                            isOnline: data.status,
+                        }));
                     }
                     break;
 
