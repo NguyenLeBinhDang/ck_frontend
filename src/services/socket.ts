@@ -6,12 +6,18 @@ let socket: WebSocket | null = null;
 
 export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
-
-    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
-        console.log('Socket is connecting or already connected.');
+    if (!url) {
+        console.error("WS URL is missing");
         return;
     }
-
+    // if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
+    //     console.log('Socket is connecting or already connected.');
+    //     return;
+    // }
+    if (socket?.readyState === WebSocket.OPEN) {
+        console.log("WS already open");
+        return;
+    }
     socket = new WebSocket(url);
 
     socket.onopen = () => {
@@ -28,8 +34,8 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
-                        token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
-                        // code: storedReLoginCode
+                        // token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
+                        code: storedReLoginCode
                     }
                 }
             }
@@ -44,7 +50,7 @@ export const connectWS = () => {
             switch (event) {
                 case "RE_LOGIN":
                 case "LOGIN":
-                    if (data.event === "RE_LOGIN") {
+                    // if (data.event === "RE_LOGIN") {
                         if (data.status === "success") {
                             // localStorage.setItem('token', res.data.RE_LOGIN_TOKEN);
                             // const currUser = localStorage.getItem('user') || '';
@@ -59,7 +65,7 @@ export const connectWS = () => {
                         } else {
                             logoutWS();
                         }
-                    }
+                    // }
                     break;
                 case "GET_USER_LIST":
                     if(status === "success") {
