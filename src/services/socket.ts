@@ -10,14 +10,15 @@ export const connectWS = () => {
         console.error("WS URL is missing");
         return;
     }
-    // if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
-    //     console.log('Socket is connecting or already connected.');
-    //     return;
-    // }
-    if (socket?.readyState === WebSocket.OPEN) {
-        console.log("WS already open");
+    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
+        console.log('Socket is connecting or already connected.');
         return;
     }
+    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
+        console.log('Socket is connecting or already connected.');
+        return;
+    }
+
     socket = new WebSocket(url);
 
     socket.onopen = () => {
@@ -39,7 +40,7 @@ export const connectWS = () => {
                     }
                 }
             }
-            sendData(payload)
+            sendData(payload);
         }
     }
 
@@ -51,16 +52,17 @@ export const connectWS = () => {
                 case "RE_LOGIN":
                 case "LOGIN":
                     // if (data.event === "RE_LOGIN") {
-                        if (data.status === "success") {
+                        if (status === "success") {
+                            getUserList();
+
                             // localStorage.setItem('token', res.data.RE_LOGIN_TOKEN);
-                            // const currUser = localStorage.getItem('user') || '';
+                            const currUser = localStorage.getItem('user') || '';
                             // store.dispatch(login({user: currUser, token: res.data.RE_LOGIN_TOKEN}))
                             const code = data.RE_LOGIN_CODE;
                             if(code) localStorage.setItem('re_login_code', code);
-                            const currUser = data.getItem('user');
+                            // const currUser = data.user;
                             store.dispatch(login({user: currUser,token: code}));
                             // log r thì lấy danh user_list luôn
-                            getUserList();
 
                         } else {
                             logoutWS();

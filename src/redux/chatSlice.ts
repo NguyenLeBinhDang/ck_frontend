@@ -118,10 +118,6 @@ export const chatSlice = createSlice({
             // Lấy ID người dùng hiện tại từ localStorage để biết tin nhắn là ĐẾN hay ĐI
             const currentUser = localStorage.getItem('user') || '';
 
-            // - Nếu là tin nhắn 'people':
-            //    + Nếu mình gửi ('from' === bản thân) -> ID hội thoại là 'to'
-            //    + Nếu người khác gửi ('from' !== bản thân) -> ID hội thoại là 'from'
-            // - Nếu là tin nhắn 'room' -> ID hội thoại là 'to' (tên phòng)
             let conversationType = "";
             if (type === 'room') {
                 conversationType = to;
