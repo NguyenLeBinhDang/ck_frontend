@@ -2,7 +2,8 @@ import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 export interface UserState {
     user: string | null;
-    token: string | null;
+    temp_user: string | null;
+    re_login_code: string | null;
 }
 
 const getInitialState = (): UserState => {
@@ -11,7 +12,8 @@ const getInitialState = (): UserState => {
 
     return {
         user: storedUser,
-        token: storedToken,
+        temp_user: null,
+        re_login_code: storedToken,
     }
 }
 
@@ -21,17 +23,30 @@ export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        login: (state, action: PayloadAction<{ user: string, token: string }>) => {
-            state.user = action.payload.user;
-            state.token = action.payload.token;
+        loginRequest: (state, action: PayloadAction<string>) => {
+            state.temp_user = action.payload;
+        },
+
+        loginSuccess: (state, action: PayloadAction<{ re_login_code: string }>) => {
+            state.re_login_code = action.payload.re_login_code;
+
+            if (state.temp_user) {
+                state.user = state.temp_user;
+                state.temp_user = null;
+            }
+        },
+
+        loginFail: (state) => {
+            state.temp_user = null;
         },
 
         logout: (state) => {
             state.user = null;
-            state.token = null;
+            state.temp_user = null;
+            state.re_login_code = null;
         }
     }
 })
 
-export const {login, logout} = userSlice.actions;
+export const {loginRequest, loginFail, loginSuccess, logout} = userSlice.actions;
 export default userSlice.reducer;
