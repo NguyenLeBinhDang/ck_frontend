@@ -1,4 +1,4 @@
-import {login, logout} from "../redux/userSlice";
+import {loginFail, loginSuccess, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
 import {receiveMessage, setConversations, setMessages, updateUserStatus} from "../redux/chatSlice";
 
@@ -35,7 +35,6 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
-                        // token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
                         code: storedReLoginCode
                     }
                 }
@@ -47,34 +46,33 @@ export const connectWS = () => {
     socket.onmessage = (e) => {
         try {
             const res = JSON.parse(e.data);
-            const{event, data, status} = res;
+            const {event, data, status} = res;
             switch (event) {
                 case "RE_LOGIN":
                 case "LOGIN":
-                    // if (data.event === "RE_LOGIN") {
-                        if (status === "success") {
-                            getUserList();
+                    if (status === "success") {
+                        const code = data.RE_LOGIN_CODE;
+                        const state = store.getState();
+                        const currUser = state.user.temp_user;
 
-                            // localStorage.setItem('token', res.data.RE_LOGIN_TOKEN);
-                            const currUser = localStorage.getItem('user') || '';
-                            // store.dispatch(login({user: currUser, token: res.data.RE_LOGIN_TOKEN}))
-                            const code = data.RE_LOGIN_CODE;
-                            if(code) localStorage.setItem('re_login_code', code);
-                            // const currUser = data.user;
-                            store.dispatch(login({user: currUser,token: code}));
-                            // log r thì lấy danh user_list luôn
-
-                        } else {
-                            logoutWS();
+                        if (currUser) {
+                            localStorage.setItem('user', currUser);
                         }
-                    // }
+                        if (code) localStorage.setItem('re_login_code', code);
+                        store.dispatch(loginSuccess({re_login_code: code}));
+
+                        getUserList();
+                    } else {
+                        store.dispatch(loginFail());
+                        logoutWS();
+                    }
                     break;
                 case "GET_USER_LIST":
-                    if(status === "success") {
+                    if (status === "success") {
                         store.dispatch(setConversations(data));
-                        if(Array.isArray(data)){
+                        if (Array.isArray(data)) {
                             data.forEach(u => {
-                                if(u.type===0 && u.name  ){
+                                if (u.type === 0 && u.name) {
                                     checkUserOnline(u.name);
                                 }
                             })
@@ -82,7 +80,7 @@ export const connectWS = () => {
                     }
                     break;
                 case "CHECK_USER_ONLINE":
-                    if (status === "success" ) {
+                    if (status === "success") {
                         // kiểm tra tạm bằng console trước khi thay bằng redux
                         console.log(`User ${data.user} is online: ${data.status}`);
                         // Có thể dispatch action update status user ở đây
@@ -95,21 +93,16 @@ export const connectWS = () => {
 
                 case "GET_PEOPLE_CHAT_MES":
                 case "GET_ROOM_CHAT_MES":
-                    if(status === "success") {
-                        store.dispatch(setMessages({ messages: data, isHistory: true }));
+                    if (status === "success") {
+                        store.dispatch(setMessages({messages: data, isHistory: true}));
                     }
                     break;
                 case "ERROR":
                     console.error("Server Error:", res.mes);
                     break;
-                default: break;
+                default:
+                    break;
             }
-
-
-
-            // if(data.event === "REGISTER"){
-            //
-            // }
 
         } catch (e) {
             console.log('Received message from server', e);
@@ -118,6 +111,7 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
+        logoutWS();
         console.log('Connection closed!');
     }
 }
@@ -156,7 +150,9 @@ export const getSocket = () => socket;
 export const getUserList = () => {
     sendData({
         action: "onchat",
-        data: { event: "GET_USER_LIST" }
+        data: {
+            event: "GET_USER_LIST"
+        }
     });
 };
 
@@ -166,7 +162,7 @@ export const createRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "CREATE_ROOM",
-            data: { name: roomName }
+            data: {name: roomName}
         }
     });
 };
@@ -177,7 +173,7 @@ export const joinRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "JOIN_ROOM",
-            data: { name: roomName }
+            data: {name: roomName}
         }
     });
 };
@@ -189,7 +185,7 @@ export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string
         action: "onchat",
         data: {
             event: "SEND_CHAT",
-            data: { type, to, mes }
+            data: {type, to, mes}
         }
     });
 
@@ -210,7 +206,7 @@ export const getPeopleChatMes = (partnerName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_PEOPLE_CHAT_MES",
-            data: { name: partnerName, page }
+            data: {name: partnerName, page}
         }
     });
 };
@@ -221,7 +217,7 @@ export const getRoomChatMes = (roomName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_ROOM_CHAT_MES",
-            data: { name: roomName, page }
+            data: {name: roomName, page}
         }
     });
 };
@@ -232,7 +228,7 @@ export const checkUserOnline = (userId: string) => {
         action: "onchat",
         data: {
             event: "CHECK_USER_ONLINE",
-            data: { user: userId }
+            data: {user: userId}
         }
     });
 };

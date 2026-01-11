@@ -7,47 +7,6 @@ import { RootState } from "../../redux/store";
 import { setActiveConversation } from "../../redux/chatSlice";
 import {useDispatch, useSelector} from "react-redux";
 
-// 1. Định nghĩa kiểu dữ liệu cho một cuộc hội thoại
-// interface Conversation {
-//     id: string;
-//     name: string;
-//     avatar: string;
-//     lastMessage: string;
-//     time: string;
-//     unreadCount: number;
-//     isOnline: boolean;
-// }
-//
-// // 2. Tạo dữ liệu giả (Mock Data) - Sau này sẽ lấy từ API
-// const MOCK_CONVERSATIONS: Conversation[] = [
-//     {
-//         id: "1",
-//         name: "Nguyễn Văn A",
-//         avatar: "", // Link ảnh hoặc để rỗng
-//         lastMessage: "Xin chào, hôm nay thế nào?",
-//         time: "10:30",
-//         unreadCount: 2,
-//         isOnline: true,
-//     },
-//     {
-//         id: "2",
-//         name: "Team Dự Án",
-//         avatar: "",
-//         lastMessage: "Đã cập nhật code mới nhé",
-//         time: "09:15",
-//         unreadCount: 0,
-//         isOnline: false,
-//     },
-//     {
-//         id: "3",
-//         name: "Support Bot",
-//         avatar: "",
-//         lastMessage: "Bạn cần giúp gì không?",
-//         time: "Hôm qua",
-//         unreadCount: 5,
-//         isOnline: true,
-//     },
-// ];
 
 export default function LeftSidebar() {
     const navigate = useNavigate();
@@ -61,11 +20,6 @@ export default function LeftSidebar() {
         dispatch(setActiveConversation(id));
         navigate(`/chat/${id}`);
     };
-
-    // const handleLogout = () => {
-    //     logoutWS();
-    //     navigate("/login");
-    // };
 
     return (
         <div className={styles.container}>
