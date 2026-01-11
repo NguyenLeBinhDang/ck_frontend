@@ -1,9 +1,12 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useRef} from "react";
 import {BsEmojiSmile, BsImage, BsPaperclip, BsSend} from "react-icons/bs";
 import styles from "./ChatWindow.module.css";
 import EmojiPicker, {EmojiClickData} from "emoji-picker-react";
 import {useParams} from "react-router-dom";
-
+import {useSelector,useDispatch} from "react-redux";
+import { RootState } from "../../redux/store";
+import { setActiveConversation } from "../../redux/chatSlice";
+import {getPeopleChatMes, getRoomChatMes} from "../../services/socket";
 export default function ChatWindow() {
 
     const {id} = useParams();
@@ -13,7 +16,34 @@ export default function ChatWindow() {
     const pickerRef = React.useRef<HTMLDivElement>(null);
     const btnRef = React.useRef<HTMLButtonElement>(null);
 
+    // Lấy dữ liệu từ Redux
+    // const currentUser = useSelector((state: RootState) => state?.user.name); // ID của mình
+    const currentUser = localStorage.getItem("user");
+    const conversation = useSelector((state: RootState) =>
+        state.chat.conversations.find(c => c.id === id)
+    );
+    // Lấy tin nhắn của hội thoại hiện tại (mặc định mảng rỗng nếu chưa có)
+    const currentMessages = useSelector((state: RootState) =>
+        id ? state.chat.messages[id] || [] : []
+    );
+    // Cập nhật activeId và load lịch sử tin nhắn khi ID thay đổi
+    const dispatch = useDispatch();
+    useEffect(() => {
+        if (id) {
+            // Set active conversation để Sidebar biết đang chọn ai
+            dispatch(setActiveConversation(id));
+            setMessage(""); // Reset ô nhập
 
+            // Gọi API lấy lịch sử tin nhắn
+            // Cần biết type là 'people' hay 'room'. Nếu chưa load được conversation, mặc định 'people'
+            const type = conversation?.type || 'people';
+            if (type === 'people') {
+                getPeopleChatMes(id);
+            } else {
+                getRoomChatMes(id);
+            }
+        }
+    }, [id, dispatch, conversation?.type]);
     const onEmojiClick = (emojiData: EmojiClickData) => {
         setMessage((prevMessage) => prevMessage + emojiData.emoji);
     }
@@ -44,19 +74,57 @@ export default function ChatWindow() {
     }, [showPicker]);
 
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     return (
         <div className={styles.windowContainer}>
+            {/*<div className={styles.messageArea}>*/}
+            {/*    <div className={`${styles.messageBubble} ${styles.myMessage}`}>*/}
+            {/*        <p>ABCD</p>*/}
+            {/*    </div>*/}
+
+            {/*    <div className={`${styles.messageBubble} ${styles.theirMessage}`}>*/}
+            {/*        <p>ABCD</p>*/}
+            {/*    </div>*/}
+            {/*</div>*/}
+
+            {/* --- MESSAGE LIST --- */}
             <div className={styles.messageArea}>
-                <div className={`${styles.messageBubble} ${styles.myMessage}`}>
-                    <p>ABCD</p>
-                </div>
+                {currentMessages.length > 0 ? (
+                    currentMessages.map((msg, index) => {
+                        // Kiểm tra xem tin nhắn này là của "mình" (sent) hay "họ" (received)
+                        // msg.from === currentUser => sent
+                        const isMyMessage = msg.from === currentUser;
 
-                <div className={`${styles.messageBubble} ${styles.theirMessage}`}>
-                    <p>ABCD</p>
-                </div>
+                        return (
+                            <div
+                                key={index}
+                                className={`${styles.messageRow} ${isMyMessage ? styles.myMessage : styles.theirMessage}`}
+                            >
+                                {!isMyMessage && (
+                                    <div className={styles.messageAvatar}>
+                                        {msg.from.charAt(0)}
+                                    </div>
+                                )}
+                                <div className={styles.bubbleWrapper}>
+                                    <div className={styles.bubble}>
+                                        {msg.mes}
+                                    </div>
+                                    <span className={styles.messageTime}>
+                                        {/* Format lại thời gian nếu cần */}
+                                        {msg.createAt?.split(' ')[1] || msg.createAt}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div className={styles.emptyChat}>
+                        <p>Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!</p>
+                    </div>
+                )}
+                {/* Div ảo để cuộn xuống cuối */}
+                <div ref={messagesEndRef} />
             </div>
-
-
             <div className={styles.footer}>
 
                 <div className={styles.toolbar}>

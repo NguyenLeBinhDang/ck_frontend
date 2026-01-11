@@ -56,11 +56,11 @@ export const connectWS = () => {
                             getUserList();
 
                             // localStorage.setItem('token', res.data.RE_LOGIN_TOKEN);
-                            const currUser = localStorage.getItem('user') || '';
+                            // const currUser = localStorage.getItem('user') || '';
                             // store.dispatch(login({user: currUser, token: res.data.RE_LOGIN_TOKEN}))
                             const code = data.RE_LOGIN_CODE;
                             if(code) localStorage.setItem('re_login_code', code);
-                            // const currUser = data.user;
+                            const currUser = data.user;
                             store.dispatch(login({user: currUser,token: code}));
                             // log r thì lấy danh user_list luôn
 
@@ -74,8 +74,13 @@ export const connectWS = () => {
                         store.dispatch(setConversations(data));
                         if(Array.isArray(data)){
                             data.forEach(u => {
+
                                 if(u.type===0 && u.name  ){
                                     checkUserOnline(u.name);
+                                    getPeopleChatMes(u.name)
+                                }
+                                else{
+                                    getRoomChatMes(u.name);
                                 }
                             })
                         }
