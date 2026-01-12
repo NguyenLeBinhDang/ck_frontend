@@ -14,11 +14,6 @@ export const connectWS = () => {
         console.log('Socket is connecting or already connected.');
         return;
     }
-    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
-        console.log('Socket is connecting or already connected.');
-        return;
-    }
-
     socket = new WebSocket(url);
 
     socket.onopen = () => {
@@ -51,15 +46,14 @@ export const connectWS = () => {
                 case "RE_LOGIN":
                 case "LOGIN":
                     if (status === "success") {
-                        const code = data.RE_LOGIN_CODE;
                         const state = store.getState();
+                        const code = data.RE_LOGIN_CODE;
                         const currUser = state.user.temp_user;
 
-                        if (currUser) {
-                            localStorage.setItem('user', currUser);
-                        }
+                        if (currUser) localStorage.setItem('user', currUser);
                         if (code) localStorage.setItem('re_login_code', code);
-                        store.dispatch(loginSuccess({re_login_code: code}));
+
+                        store.dispatch(loginSuccess(code));
 
                         getUserList();
                     } else {
@@ -73,7 +67,10 @@ export const connectWS = () => {
                         if (Array.isArray(data)) {
                             data.forEach(u => {
                                 if (u.type === 0 && u.name) {
+                                    getPeopleChatMes(u.name);
                                     checkUserOnline(u.name);
+                                } else {
+                                    // getRoomChatMes(u.name);
                                 }
                             })
                         }
@@ -134,9 +131,6 @@ const logoutWS = () => {
     socket = null;
 }
 
-// export const sendData = (data: any) => {
-//     socket?.send(JSON.stringify(data))
-// };
 export const sendData = (data: any) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(data));

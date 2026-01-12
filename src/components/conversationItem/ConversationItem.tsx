@@ -14,7 +14,15 @@ interface Props {
 }
 
 const ConversationItem: React.FC<Props> = ({
-                                               id, name, avatar, lastMessage, time, unreadCount, isOnline, isActive, onSelect
+                                               id,
+                                               name,
+                                               avatar,
+                                               lastMessage,
+                                               time,
+                                               unreadCount,
+                                               isOnline,
+                                               isActive,
+                                               onSelect
                                            }) => {
     return (
         <div
@@ -24,8 +32,8 @@ const ConversationItem: React.FC<Props> = ({
             <div className={item.content}>
                 {/* Avatar */}
                 <div className={item.avatarWrapper}>
-                    <img src={avatar} alt={name} className={item.avatar} />
-                    {isOnline && <span className={item.onlineDot} />}
+                    <img src={avatar} alt={name} className={item.avatar}/>
+                    {isOnline && <span className={item.onlineDot}/>}
                 </div>
 
                 {/* Message info */}

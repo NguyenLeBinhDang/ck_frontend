@@ -27,8 +27,8 @@ export const userSlice = createSlice({
             state.temp_user = action.payload;
         },
 
-        loginSuccess: (state, action: PayloadAction<{ re_login_code: string }>) => {
-            state.re_login_code = action.payload.re_login_code;
+        loginSuccess: (state, action: PayloadAction<string>) => {
+            state.re_login_code = action.payload;
 
             if (state.temp_user) {
                 state.user = state.temp_user;
