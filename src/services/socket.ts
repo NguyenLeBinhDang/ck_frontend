@@ -1,4 +1,4 @@
-import {login, logout} from "../redux/userSlice";
+import {loginFail, loginSuccess, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
 import {receiveMessage, setConversations, setMessages, updateUserStatus} from "../redux/chatSlice";
 
@@ -51,36 +51,30 @@ export const connectWS = () => {
             switch (event) {
                 case "RE_LOGIN":
                 case "LOGIN":
-                    // if (data.event === "RE_LOGIN") {
-                        if (status === "success") {
-                            getUserList();
+                    if (status === "success") {
+                        const code = data.RE_LOGIN_CODE;
+                        const state = store.getState();
+                        const currUser = state.user.temp_user;
 
-                            // localStorage.setItem('token', res.data.RE_LOGIN_TOKEN);
-                            // const currUser = localStorage.getItem('user') || '';
-                            // store.dispatch(login({user: currUser, token: res.data.RE_LOGIN_TOKEN}))
-                            const code = data.RE_LOGIN_CODE;
-                            if(code) localStorage.setItem('re_login_code', code);
-                            const currUser = data.user;
-                            store.dispatch(login({user: currUser,token: code}));
-                            // log r thì lấy danh user_list luôn
-
-                        } else {
-                            logoutWS();
+                        if (currUser) {
+                            localStorage.setItem('user', currUser);
                         }
-                    // }
+                        if (code) localStorage.setItem('re_login_code', code);
+                        store.dispatch(loginSuccess({re_login_code: code}));
+
+                        getUserList();
+                    } else {
+                        store.dispatch(loginFail());
+                        logoutWS();
+                    }
                     break;
                 case "GET_USER_LIST":
-                    if(status === "success") {
+                    if (status === "success") {
                         store.dispatch(setConversations(data));
-                        if(Array.isArray(data)){
+                        if (Array.isArray(data)) {
                             data.forEach(u => {
-
-                                if(u.type===0 && u.name  ){
+                                if (u.type === 0 && u.name) {
                                     checkUserOnline(u.name);
-                                    getPeopleChatMes(u.name)
-                                }
-                                else{
-                                    getRoomChatMes(u.name);
                                 }
                             })
                         }
@@ -110,12 +104,6 @@ export const connectWS = () => {
                 default: break;
             }
 
-
-
-            // if(data.event === "REGISTER"){
-            //
-            // }
-
         } catch (e) {
             console.log('Received message from server', e);
 
@@ -123,6 +111,7 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
+        logoutWS();
         console.log('Connection closed!');
     }
 }

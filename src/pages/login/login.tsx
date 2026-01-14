@@ -1,62 +1,30 @@
 import './login.css';
 import {useEffect, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
-import {useAppDispatch} from "../../redux/hooks";
-import {getSocket, sendData} from "../../services/socket";
-import {login} from "../../redux/userSlice";
+import {useAppDispatch, useAppSelector} from "../../redux/hooks";
+import {sendData} from "../../services/socket";
+import {loginRequest} from "../../redux/userSlice";
 
 export default function Login() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
     const [error, setError] = useState('')
+    const {re_login_code} = useAppSelector(state => state.user);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        const socket = getSocket();
-
-        if (!socket) {
-            return;
+        if(re_login_code){
+            navigate("/chat");
         }
-
-        //on receiving message from server
-        socket.onmessage = (e) => {
-            try {
-                const response = JSON.parse(e.data);
-                if (response.event === 'LOGIN') {
-                    if (response.status === 'success') {
-                        const re_login_code = response.data.RE_LOGIN_CODE;
-
-                        //save user and relogincode into localstorage
-                        localStorage.setItem('user', user);
-                        localStorage.setItem('re_login_code', re_login_code);
-
-                        //update user and relogincode in store
-                        dispatch(login({user: user, token: re_login_code}));
-
-                        //navigate to chat page
-                        navigate('/chat');
-                    } else {
-                        setError(response.mes);
-                    }
-
-                }
-            } catch (error) {
-                console.log(error);
-            }
-
-        }
-
-        return () => {
-            if (socket) socket.onmessage = null;
-        }
-
-    }, [navigate, dispatch, user])
+    }, [re_login_code,navigate])
 
     //send login request
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        dispatch(loginRequest(user))
 
         const payload = {
             action: "onchat",
@@ -68,6 +36,7 @@ export default function Login() {
                 }
             }
         };
+
         sendData(payload);
     };
 
