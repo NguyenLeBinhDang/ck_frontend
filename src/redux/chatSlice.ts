@@ -24,13 +24,16 @@ interface ChatState {
     conversations: Conversation[];
     activeId: string | null; // ID của hội thoại đang mở
     messages: { [key: string]: Message[] }; // Lưu tin nhắn theo ID hội thoại: { "user1": [msg1, msg2] }
+    // userCheckResult: { username: string, exists: boolean } | null;
 }
 
 const initialState: ChatState = {
     conversations: [],
     activeId: null,
     messages: {},
+    // userCheckResult: null
 };
+
 export const chatSlice = createSlice({
     name: 'chat',
     initialState,
@@ -62,6 +65,16 @@ export const chatSlice = createSlice({
             const conv = state.conversations.find(c => c.id === id);
             if(conv) conv.isOnline = isOnline;
 
+        },
+        // setUserCheckResult: (state, action: PayloadAction<{ username: string, exists: boolean } | null>) => {
+        //     state.userCheckResult = action.payload;
+        // },
+
+        addConversation: (state, action: PayloadAction<Conversation>) => {
+            const existing = state.conversations.find(c => c.id === action.payload.id);
+            if (!existing) {
+                state.conversations.unshift(action.payload);
+            }
         },
         setMessages: (state, action: PayloadAction<{ messages: any[], isHistory?: boolean }>) => {
             const { messages } = action.payload;
@@ -170,5 +183,5 @@ export const chatSlice = createSlice({
     },
 });
 
-export const { setActiveConversation, setConversations, receiveMessage, setMessages,updateUserStatus } = chatSlice.actions;
+export const { setActiveConversation, setConversations, receiveMessage, setMessages,updateUserStatus,addConversation } = chatSlice.actions;
 export default chatSlice.reducer;

@@ -1,6 +1,11 @@
 import {loginFail, loginSuccess, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
-import {receiveMessage, setConversations, setMessages, updateUserStatus} from "../redux/chatSlice";
+import {
+    receiveMessage,
+    setConversations,
+    setMessages,
+    updateUserStatus
+} from "../redux/chatSlice";
 
 let socket: WebSocket | null = null;
 
@@ -8,10 +13,6 @@ export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
     if (!url) {
         console.error("WS URL is missing");
-        return;
-    }
-    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
-        console.log('Socket is connecting or already connected.');
         return;
     }
     if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
@@ -69,12 +70,16 @@ export const connectWS = () => {
                     }
                     break;
                 case "GET_USER_LIST":
-                    if (status === "success") {
+                    if(status === "success") {
                         store.dispatch(setConversations(data));
-                        if (Array.isArray(data)) {
+                        if(Array.isArray(data)){
                             data.forEach(u => {
                                 if (u.type === 0 && u.name) {
                                     checkUserOnline(u.name);
+                                    getPeopleChatMes(u.name)
+                                }
+                                else{
+                                    getRoomChatMes(u.name);
                                 }
                             })
                         }
@@ -98,6 +103,11 @@ export const connectWS = () => {
                         store.dispatch(setMessages({ messages: data, isHistory: true }));
                     }
                     break;
+
+                case "SEND_CHAT":
+                    // Nhận tin nhắn realtime từ server
+                    store.dispatch(receiveMessage(data));
+                    break;
                 case "ERROR":
                     console.error("Server Error:", res.mes);
                     break;
@@ -111,7 +121,6 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
-        logoutWS();
         console.log('Connection closed!');
     }
 }
@@ -228,5 +237,31 @@ export const checkUserOnline = (userId: string) => {
             event: "CHECK_USER_ONLINE",
             data: { user: userId }
         }
+    });
+};
+export const checkUserExist = (username: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+        const handleMessage = (e: MessageEvent) => {
+            const res = JSON.parse(e.data);
+
+            if (res.event === "CHECK_USER_EXIST") {
+                socket?.removeEventListener('message', handleMessage);
+
+                const exists = res.status === "success" &&
+                    (res.data.status === true || res.data.status === "true");
+
+                resolve(exists);
+            }
+        };
+
+        socket?.addEventListener('message', handleMessage);
+
+        sendData({
+            action: "onchat",
+            data: {
+                event: "CHECK_USER_EXIST",
+                data: { user: username }
+            }
+        });
     });
 };

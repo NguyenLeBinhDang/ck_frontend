@@ -1,17 +1,17 @@
 import React, {useState} from "react";
-import {FaSearch, FaSignOutAlt, FaUserCircle} from "react-icons/fa";
+import {FaPlus, FaSearch, FaSignOutAlt, FaUserCircle} from "react-icons/fa";
 import styles from "./LeftSidebar.module.css";
 import ConversationItem from "../conversationItem/ConversationItem";
 import {useNavigate} from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { setActiveConversation } from "../../redux/chatSlice";
 import {useDispatch, useSelector} from "react-redux";
-
+import { AddContactModal } from "../addContactModal/AddContactModal";
 
 export default function LeftSidebar() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
     // Lấy dữ liệu từ Redux Store
     const conversations = useSelector((state: RootState) => state?.chat.conversations|| []);
     const activeId = useSelector((state: RootState) => state.chat.activeId|| null);
@@ -41,19 +41,29 @@ export default function LeftSidebar() {
             </div>
 
             <div className={styles.chatListWrapper}>
+                {/*<div className={styles.searchContainer}>*/}
+                {/*    <div className={styles.inputGroup}>*/}
+                {/*        <span className={styles.searchIcon}>*/}
+                {/*            <FaSearch size={16}/>*/}
+                {/*        </span>*/}
+                {/*        <input*/}
+                {/*            type="text"*/}
+                {/*            className={styles.searchInput}*/}
+                {/*            placeholder="Tìm kiếm..."*/}
+                {/*        />*/}
+                {/*    </div>*/}
+                {/*</div>*/}
                 <div className={styles.searchContainer}>
-                    <div className={styles.inputGroup}>
-                        <span className={styles.searchIcon}>
-                            <FaSearch size={16}/>
+                    <div
+                        className={styles.addContactButton}
+                        onClick={() => setIsModalOpen(true)}
+                    >
+                        <span className={styles.addIcon}>
+                            <FaPlus size={16}/>
                         </span>
-                        <input
-                            type="text"
-                            className={styles.searchInput}
-                            placeholder="Tìm kiếm..."
-                        />
+                        <span>Thêm liên hệ</span>
                     </div>
                 </div>
-
                 <div className={styles.contactList}>
                     {/* --- BẮT ĐẦU VÒNG LẶP --- */}
                     {conversations.map((chat) => (
@@ -76,6 +86,10 @@ export default function LeftSidebar() {
                 </div>
 
             </div>
+            <AddContactModal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
         </div>
     );
 }
