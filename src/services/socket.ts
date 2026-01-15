@@ -78,9 +78,9 @@ export const connectWS = () => {
                                     checkUserOnline(u.name);
                                     getPeopleChatMes(u.name)
                                 }
-                                else{
-                                    getRoomChatMes(u.name);
-                                }
+                                // else{
+                                //     getRoomChatMes(u.name);
+                                // }
                             })
                         }
                     }
