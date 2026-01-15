@@ -1,4 +1,4 @@
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface Conversation {
     id: string;
@@ -8,7 +8,7 @@ interface Conversation {
     time: string;
     unreadCount: number;
     isOnline: boolean;
-    type: 'people' | 'room';
+    type:'people' | 'room';
 }
 
 export interface Message {
@@ -24,13 +24,16 @@ interface ChatState {
     conversations: Conversation[];
     activeId: string | null; // ID của hội thoại đang mở
     messages: { [key: string]: Message[] }; // Lưu tin nhắn theo ID hội thoại: { "user1": [msg1, msg2] }
+    // userCheckResult: { username: string, exists: boolean } | null;
 }
 
 const initialState: ChatState = {
     conversations: [],
     activeId: null,
     messages: {},
+    // userCheckResult: null
 };
+
 export const chatSlice = createSlice({
     name: 'chat',
     initialState,
@@ -51,82 +54,85 @@ export const chatSlice = createSlice({
                 name: user.name,
                 avatar: `https://ui-avatars.com/api/?name=${user.name}&background=random`, // Tạo avatar ngẫu nhiên
                 lastMessage: "Chưa có tin nhắn",
-                time: user.actionTime ? new Date(user.actionTime).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : "",
+                time: user.actionTime ? new Date(user.actionTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "",
                 unreadCount: 0,
                 isOnline: false,
                 type: user.type === 0 ? 'people' : 'room' // API trả type 0 là người
             }));
         },
-        updateUserStatus: (state, action: PayloadAction<{ id: String, isOnline: boolean }>) => {
-            const {id, isOnline} = action.payload
+        updateUserStatus: (state, action: PayloadAction<{id:String,isOnline: boolean }>) => {
+            const {id,isOnline} = action.payload
             const conv = state.conversations.find(c => c.id === id);
-            if (conv) conv.isOnline = isOnline;
+            if(conv) conv.isOnline = isOnline;
 
         },
+        // setUserCheckResult: (state, action: PayloadAction<{ username: string, exists: boolean } | null>) => {
+        //     state.userCheckResult = action.payload;
+        // },
+
+        addConversation: (state, action: PayloadAction<Conversation>) => {
+            const existing = state.conversations.find(c => c.id === action.payload.id);
+            if (!existing) {
+                state.conversations.unshift(action.payload);
+            }
+        },
         setMessages: (state, action: PayloadAction<{ messages: any[], isHistory?: boolean }>) => {
-            const {messages} = action.payload;
+            const { messages } = action.payload;
             if (!messages || messages.length === 0) return;
 
-            const currentUser = localStorage.getItem('user') || '';
-            const lastMsg = messages[0];
+            const currentUser = localStorage.getItem('user') || ''; // dòng này nữa sẽ cập nhât lấy user từ action
+            const firstMsg = messages[0];
 
             // 1. Xác định ID hội thoại từ dữ liệu tin nhắn
             let conversationId = "";
 
             // Kiểm tra xem đây là tin nhắn nhóm hay cá nhân dựa trên type hoặc ngữ cảnh
 
-            const msgType = (lastMsg.type === 0 || lastMsg.type === 1) ? 'people' : 'room';
+            const msgType = (firstMsg.type === 0 || firstMsg.type === 1) ? 'people' : 'room';
 
             if (msgType === 'room') {
-                conversationId = lastMsg.to;
+                conversationId = firstMsg.to; // Với Room, 'to' là tên phòng
             } else {
                 //name ng gửi to là người nhận
                 // Nếu 'name' (người gửi) là mình -> Mình đang chat với 'to'
                 // Nếu 'name' (người gửi) là người khác -> Mình đang chat với 'name'
-                conversationId = lastMsg.name === currentUser ? lastMsg.to : lastMsg.name;
+                // hiện tại api chỉ trả vể to.
+                conversationId = firstMsg.name === currentUser ? firstMsg.to : firstMsg.name;
             }
-
+         
             // Fallback: Nếu không tìm được từ tin nhắn (hiếm gặp), dùng activeId hiện tại
             if (!conversationId && state.activeId) {
                 conversationId = state.activeId;
             }
-
+            const conv= state.conversations.find(c => c.id === conversationId);
+            if (conv) {
+                conv.lastMessage = firstMsg.mes;
+                conv.time = firstMsg.createAt;
+            }
             if (conversationId) {
                 // 2. Map dữ liệu API sang format UI
                 const formattedMessages: Message[] = messages.map((m: any) => ({
                     id: m.id,
-                    from: m.name, // API trả về 'name' là người gửi
+                    from: m.name,
                     to: m.to,
                     mes: m.mes,
                     type: (m.type === 0 || m.type === 1) ? 'people' : 'room',
                     createAt: m.createAt
                 }));
 
-                // Cập nhật last message sau khi lấy ra message từ api
-                const convIndex = state.conversations.findIndex(c => c.id === conversationId);
-
-                if (convIndex !== -1) {
-                    const targetConv = state.conversations[convIndex];
-
-                    // Cập nhật nội dung và thời gian
-                    targetConv.lastMessage = lastMsg.name === currentUser ? "Bạn: " + lastMsg.mes : lastMsg.mes;
-                    targetConv.time = lastMsg.createAt;
-                }
-
                 // 3. Lưu vào store
                 // API thường trả tin nhắn mới nhất ở đầu mảng (Index 0 là mới nhất)
                 // Nhưng UI Chat thường render từ trên xuống (Cũ -> Mới)
                 // Nên ta cần reverse lại để tin nhắn cũ nhất nằm ở index 0
                 state.messages[conversationId] = formattedMessages.reverse();
+
             }
         },
+        // cập nhật last message
 
         // Xử lý tin nhắn đến
         receiveMessage: (state, action: PayloadAction<any>) => {
-            const {from, to, mes, type, createAt} = action.payload;
+            const { from, to, mes, type,createAt } = action.payload;
 
             // Lấy ID người dùng hiện tại từ localStorage để biết tin nhắn là ĐẾN hay ĐI
             const currentUser = localStorage.getItem('user') || '';
@@ -148,7 +154,7 @@ export const chatSlice = createSlice({
                 to,
                 mes,
                 type,
-                createAt: createAt || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+                createAt:createAt|| new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
 
             state.messages[conversationId].push(newMessage);
@@ -177,11 +183,5 @@ export const chatSlice = createSlice({
     },
 });
 
-export const {
-    setActiveConversation,
-    setConversations,
-    receiveMessage,
-    setMessages,
-    updateUserStatus
-} = chatSlice.actions;
+export const { setActiveConversation, setConversations, receiveMessage, setMessages,updateUserStatus,addConversation } = chatSlice.actions;
 export default chatSlice.reducer;

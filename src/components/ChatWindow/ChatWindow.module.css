@@ -155,3 +155,12 @@
     background-color: #e7f1ff;
     color: #0d6efd;
 }
+.emptyChat {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 15px;
+}
