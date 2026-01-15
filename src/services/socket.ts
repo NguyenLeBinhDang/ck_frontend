@@ -1,6 +1,11 @@
 import {loginFail, loginSuccess, logout} from "../redux/userSlice";
 import {store} from "../redux/store";
-import {receiveMessage, setConversations, setMessages, updateUserStatus} from "../redux/chatSlice";
+import {
+    receiveMessage,
+    setConversations,
+    setMessages,
+    updateUserStatus
+} from "../redux/chatSlice";
 
 let socket: WebSocket | null = null;
 
@@ -8,10 +13,6 @@ export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
     if (!url) {
         console.error("WS URL is missing");
-        return;
-    }
-    if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
-        console.log('Socket is connecting or already connected.');
         return;
     }
     if (socket && (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING)) {
@@ -35,6 +36,7 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
+                        // token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
                         code: storedReLoginCode
                     }
                 }
@@ -46,7 +48,7 @@ export const connectWS = () => {
     socket.onmessage = (e) => {
         try {
             const res = JSON.parse(e.data);
-            const {event, data, status} = res;
+            const{event, data, status} = res;
             switch (event) {
                 case "RE_LOGIN":
                 case "LOGIN":
@@ -68,19 +70,23 @@ export const connectWS = () => {
                     }
                     break;
                 case "GET_USER_LIST":
-                    if (status === "success") {
+                    if(status === "success") {
                         store.dispatch(setConversations(data));
-                        if (Array.isArray(data)) {
+                        if(Array.isArray(data)){
                             data.forEach(u => {
                                 if (u.type === 0 && u.name) {
                                     checkUserOnline(u.name);
+                                    getPeopleChatMes(u.name)
                                 }
+                                // else{
+                                //     getRoomChatMes(u.name);
+                                // }
                             })
                         }
                     }
                     break;
                 case "CHECK_USER_ONLINE":
-                    if (status === "success") {
+                    if (status === "success" ) {
                         // kiểm tra tạm bằng console trước khi thay bằng redux
                         console.log(`User ${data.user} is online: ${data.status}`);
                         // Có thể dispatch action update status user ở đây
@@ -93,15 +99,19 @@ export const connectWS = () => {
 
                 case "GET_PEOPLE_CHAT_MES":
                 case "GET_ROOM_CHAT_MES":
-                    if (status === "success") {
-                        store.dispatch(setMessages({messages: data, isHistory: true}));
+                    if(status === "success") {
+                        store.dispatch(setMessages({ messages: data, isHistory: true }));
                     }
+                    break;
+
+                case "SEND_CHAT":
+                    // Nhận tin nhắn realtime từ server
+                    store.dispatch(receiveMessage(data));
                     break;
                 case "ERROR":
                     console.error("Server Error:", res.mes);
                     break;
-                default:
-                    break;
+                default: break;
             }
 
         } catch (e) {
@@ -111,7 +121,6 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
-        logoutWS();
         console.log('Connection closed!');
     }
 }
@@ -150,9 +159,7 @@ export const getSocket = () => socket;
 export const getUserList = () => {
     sendData({
         action: "onchat",
-        data: {
-            event: "GET_USER_LIST"
-        }
+        data: { event: "GET_USER_LIST" }
     });
 };
 
@@ -162,7 +169,7 @@ export const createRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "CREATE_ROOM",
-            data: {name: roomName}
+            data: { name: roomName }
         }
     });
 };
@@ -173,7 +180,7 @@ export const joinRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "JOIN_ROOM",
-            data: {name: roomName}
+            data: { name: roomName }
         }
     });
 };
@@ -185,7 +192,7 @@ export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string
         action: "onchat",
         data: {
             event: "SEND_CHAT",
-            data: {type, to, mes}
+            data: { type, to, mes }
         }
     });
 
@@ -206,7 +213,7 @@ export const getPeopleChatMes = (partnerName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_PEOPLE_CHAT_MES",
-            data: {name: partnerName, page}
+            data: { name: partnerName, page }
         }
     });
 };
@@ -217,7 +224,7 @@ export const getRoomChatMes = (roomName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_ROOM_CHAT_MES",
-            data: {name: roomName, page}
+            data: { name: roomName, page }
         }
     });
 };
@@ -228,7 +235,33 @@ export const checkUserOnline = (userId: string) => {
         action: "onchat",
         data: {
             event: "CHECK_USER_ONLINE",
-            data: {user: userId}
+            data: { user: userId }
         }
+    });
+};
+export const checkUserExist = (username: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+        const handleMessage = (e: MessageEvent) => {
+            const res = JSON.parse(e.data);
+
+            if (res.event === "CHECK_USER_EXIST") {
+                socket?.removeEventListener('message', handleMessage);
+
+                const exists = res.status === "success" &&
+                    (res.data.status === true || res.data.status === "true");
+
+                resolve(exists);
+            }
+        };
+
+        socket?.addEventListener('message', handleMessage);
+
+        sendData({
+            action: "onchat",
+            data: {
+                event: "CHECK_USER_EXIST",
+                data: { user: username }
+            }
+        });
     });
 };
