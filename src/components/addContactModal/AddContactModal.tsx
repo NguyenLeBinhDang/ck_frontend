@@ -62,7 +62,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ open, onClose 
                 id: trimmed,
                 name: trimmed,
                 avatar: `https://ui-avatars.com/api/?name=${trimmed}&background=random`,
-                lastMessage: 'Đã kết nối 👋',
+                lastMessage: 'Xin chào!',
                 time: new Date().toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -73,7 +73,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ open, onClose 
             }));
 
             // Gửi tin nhắn chào
-            sendChatMessage('people', trimmed, 'Xin chào! 👋');
+            sendChatMessage('people', trimmed, 'Xin chào!');
 
             onClose();
         } catch (err) {
