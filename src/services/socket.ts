@@ -61,7 +61,7 @@ export const connectWS = () => {
                             localStorage.setItem('user', currUser);
                         }
                         if (code) localStorage.setItem('re_login_code', code);
-                        store.dispatch(loginSuccess({re_login_code: code}));
+                        store.dispatch(loginSuccess(code));
 
                         getUserList();
                     } else {
