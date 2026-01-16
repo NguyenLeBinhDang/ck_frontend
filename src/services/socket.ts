@@ -6,6 +6,7 @@ import {
     setMessages,
     updateUserStatus
 } from "../redux/chatSlice";
+import {decodeMessage, encodeMessage} from "./messageService";
 
 let socket: WebSocket | null = null;
 
@@ -48,7 +49,8 @@ export const connectWS = () => {
     socket.onmessage = (e) => {
         try {
             const res = JSON.parse(e.data);
-            const{event, data, status} = res;
+            console.log(res);
+            const {event, data, status} = res;
             switch (event) {
                 case "RE_LOGIN":
                 case "LOGIN":
@@ -70,9 +72,9 @@ export const connectWS = () => {
                     }
                     break;
                 case "GET_USER_LIST":
-                    if(status === "success") {
+                    if (status === "success") {
                         store.dispatch(setConversations(data));
-                        if(Array.isArray(data)){
+                        if (Array.isArray(data)) {
                             data.forEach(u => {
                                 if (u.type === 0 && u.name) {
                                     checkUserOnline(u.name);
@@ -86,12 +88,12 @@ export const connectWS = () => {
                     }
                     break;
                 case "CHECK_USER_ONLINE":
-                    if (status === "success" ) {
+                    if (status === "success") {
                         // kiểm tra tạm bằng console trước khi thay bằng redux
                         console.log(`User ${data.user} is online: ${data.status}`);
                         // Có thể dispatch action update status user ở đây
                         store.dispatch(updateUserStatus({
-                            id: data.user, //api đặt là user
+                            id: data.user,
                             isOnline: data.status,
                         }));
                     }
@@ -99,19 +101,31 @@ export const connectWS = () => {
 
                 case "GET_PEOPLE_CHAT_MES":
                 case "GET_ROOM_CHAT_MES":
-                    if(status === "success") {
-                        store.dispatch(setMessages({ messages: data, isHistory: true }));
+                    if (status === "success") {
+                        const decodeMessageList = data.map((item: any) => ({
+                            ...item,
+                            mes: decodeMessage(item.mes)
+                        }));
+                        store.dispatch(setMessages({messages: decodeMessageList, isHistory: true}));
                     }
                     break;
 
                 case "SEND_CHAT":
-                    // Nhận tin nhắn realtime từ server
-                    store.dispatch(receiveMessage(data));
+                    if (status === "success" && data) {
+                        const cleanData = {
+                            ...data,
+                            mes: decodeMessage(data.mes),
+                            from: data.name,
+                            createAt: new Date().toISOString()
+                        }
+                        store.dispatch(receiveMessage(cleanData));
+                    }
                     break;
                 case "ERROR":
                     console.error("Server Error:", res.mes);
                     break;
-                default: break;
+                default:
+                    break;
             }
 
         } catch (e) {
@@ -159,7 +173,7 @@ export const getSocket = () => socket;
 export const getUserList = () => {
     sendData({
         action: "onchat",
-        data: { event: "GET_USER_LIST" }
+        data: {event: "GET_USER_LIST"}
     });
 };
 
@@ -169,7 +183,7 @@ export const createRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "CREATE_ROOM",
-            data: { name: roomName }
+            data: {name: roomName}
         }
     });
 };
@@ -180,7 +194,7 @@ export const joinRoom = (roomName: string) => {
         action: "onchat",
         data: {
             event: "JOIN_ROOM",
-            data: { name: roomName }
+            data: {name: roomName}
         }
     });
 };
@@ -188,11 +202,13 @@ export const joinRoom = (roomName: string) => {
 // Gửi tin nhắn
 export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string) => {
     // Gửi lên server
+    const encodedMessage = encodeMessage(mes);
+
     sendData({
         action: "onchat",
         data: {
             event: "SEND_CHAT",
-            data: { type, to, mes }
+            data: {type: type, to: to, mes: encodedMessage}
         }
     });
 
@@ -213,7 +229,7 @@ export const getPeopleChatMes = (partnerName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_PEOPLE_CHAT_MES",
-            data: { name: partnerName, page }
+            data: {name: partnerName, page}
         }
     });
 };
@@ -224,7 +240,7 @@ export const getRoomChatMes = (roomName: string, page: number = 1) => {
         action: "onchat",
         data: {
             event: "GET_ROOM_CHAT_MES",
-            data: { name: roomName, page }
+            data: {name: roomName, page}
         }
     });
 };
@@ -235,7 +251,7 @@ export const checkUserOnline = (userId: string) => {
         action: "onchat",
         data: {
             event: "CHECK_USER_ONLINE",
-            data: { user: userId }
+            data: {user: userId}
         }
     });
 };
@@ -260,7 +276,7 @@ export const checkUserExist = (username: string): Promise<boolean> => {
             action: "onchat",
             data: {
                 event: "CHECK_USER_EXIST",
-                data: { user: username }
+                data: {user: username}
             }
         });
     });
