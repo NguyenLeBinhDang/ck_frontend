@@ -9,6 +9,7 @@ import {
 import {decodeMessage, encodeMessage} from "./messageService";
 
 let socket: WebSocket | null = null;
+let isUserLogout: boolean = false;
 
 export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
@@ -25,6 +26,8 @@ export const connectWS = () => {
 
     socket.onopen = () => {
         console.log('Connected to server');
+
+        isUserLogout = false;
 
         const storedUsername = localStorage.getItem('user');
         const storedReLoginCode = localStorage.getItem('re_login_code');
@@ -66,6 +69,7 @@ export const connectWS = () => {
 
                         getUserList();
                     } else {
+                        console.error("Đăng nhập thất bại.")
                         store.dispatch(loginFail());
                         logoutWS();
                     }
@@ -134,12 +138,25 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
-        logoutWS();
         console.log('Connection closed!');
+
+        if (!isUserLogout) {
+            console.log("Disconnected");
+            alert("Mất kết nối server! Vui lòng nhấn refresh.");
+        }
+
+        logoutWS();
+    }
+
+    socket.onerror = (e) => {
+        console.log('Received message from server', e);
+        socket?.close();
     }
 }
 
 const logoutWS = () => {
+    isUserLogout = true;
+
     localStorage.removeItem('re_login_code');
     localStorage.removeItem('user');
 
