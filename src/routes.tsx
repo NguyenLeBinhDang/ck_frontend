@@ -4,34 +4,38 @@ import Register from "./pages/register/register";
 import ChatWindow from "./components/ChatWindow/ChatWindow";
 import ChatLayout from "./pages/chat/chatLayout";
 import ChatWelcome from "./components/ChatWindow/ChatWelcome";
+import {RootLayout} from "./components/layout/rootLayout";
 
 export const routes = createBrowserRouter([
     {
         path: "/",
-        element: <Login/>
-    },
-    {
-        path: "/login",
-        element: <Login/>
-    },
-    {
-        path: "/register",
-        element: <Register/>
-    },
-    {
-        path: "/chat",
-        element: <ChatLayout/>,
+        element: <RootLayout/>,
         children: [
             {
-                index: true,
-                element: <ChatWelcome/>
-
+                path: "/login",
+                element: <Login/>
             },
             {
-                path: ":id",
-                element: <ChatWindow/>
+                path: "/register",
+                element: <Register/>
+            },
+            {
+                path: "/chat",
+                element: <ChatLayout/>,
+                children: [
+                    {
+                        index: true,
+                        element: <ChatWelcome/>
+
+                    },
+                    {
+                        path: ":id",
+                        element: <ChatWindow/>
+                    }
+                ]
             }
         ]
-    }
+    },
+
 
 ])

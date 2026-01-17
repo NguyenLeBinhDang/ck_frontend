@@ -7,7 +7,6 @@ import {useSelector, useDispatch} from "react-redux";
 import {RootState} from "../../redux/store";
 import {setActiveConversation} from "../../redux/chatSlice";
 import {getPeopleChatMes, getRoomChatMes, sendChatMessage} from "../../services/socket";
-import {encodeMessage} from "../../services/messageService";
 import GifPicker from "../gif/GifPicker";
 
 export default function ChatWindow() {

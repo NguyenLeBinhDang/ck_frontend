@@ -37,7 +37,6 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
-                        // token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
                         code: storedReLoginCode
                     }
                 }

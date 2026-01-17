@@ -9,15 +9,8 @@ export default function Login() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
     const [error, setError] = useState('')
-    const {re_login_code} = useAppSelector(state => state.user);
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        if(re_login_code){
-            navigate("/chat");
-        }
-    }, [re_login_code,navigate])
 
     //send login request
     const handleLogin = (e: React.FormEvent) => {
