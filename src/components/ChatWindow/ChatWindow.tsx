@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from "react";
-import {BsEmojiSmile, BsImage, BsPaperclip, BsSend} from "react-icons/bs";
+import {BsEmojiSmile, BsFiletypeGif, BsGift, BsImage, BsPaperclip, BsSend} from "react-icons/bs";
 import styles from "./ChatWindow.module.css";
 import EmojiPicker, {EmojiClickData} from "emoji-picker-react";
 import {useParams} from "react-router-dom";
@@ -7,15 +7,24 @@ import {useSelector, useDispatch} from "react-redux";
 import {RootState} from "../../redux/store";
 import {setActiveConversation} from "../../redux/chatSlice";
 import {getPeopleChatMes, getRoomChatMes, sendChatMessage} from "../../services/socket";
+import {encodeMessage} from "../../services/messageService";
+import GifPicker from "../gif/GifPicker";
 
 export default function ChatWindow() {
 
     const {id} = useParams();
     const [message, setMessage] = React.useState("");
-    const [showPicker, setShowPicker] = React.useState(false);
 
-    const pickerRef = React.useRef<HTMLDivElement>(null);
-    const btnRef = React.useRef<HTMLButtonElement>(null);
+    //emoji
+    const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+    const emojiBtnRef = React.useRef<HTMLButtonElement>(null);
+    const emojiPickerRef = React.useRef<HTMLDivElement>(null);
+
+
+    //gif
+    const [showGifPicker, setShowGifPicker] = React.useState(false);
+    const gifBtnRef = React.useRef<HTMLButtonElement>(null);
+    const gifPickerRef = React.useRef<HTMLDivElement>(null);
 
     // Lấy dữ liệu từ Redux
     // const currentUser = useSelector((state: RootState) => state?.user.name); // ID của mình
@@ -58,21 +67,31 @@ export default function ChatWindow() {
     useEffect(() => {
         const handleClickOut = (event: MouseEvent) => {
             if (
-                showPicker &&
-                pickerRef.current &&
-                !pickerRef.current.contains(event.target as Node) &&
-                btnRef.current &&
-                !btnRef.current.contains(event.target as Node)
+                showEmojiPicker &&
+                emojiPickerRef.current &&
+                !emojiPickerRef.current.contains(event.target as Node) &&
+                emojiBtnRef.current &&
+                !emojiBtnRef.current.contains(event.target as Node)
             ) {
-                setShowPicker(false);
+                setShowEmojiPicker(false);
             }
-        }
 
+            if (
+                showGifPicker &&
+                gifPickerRef.current &&
+                !gifPickerRef.current.contains(event.target as Node) &&
+                gifBtnRef.current &&
+                !gifBtnRef.current.contains(event.target as Node)
+            ) {
+                setShowGifPicker(false);
+            }
+
+        }
         document.addEventListener("mousedown", handleClickOut);
         return () => {
             document.removeEventListener("mousedown", handleClickOut);
         }
-    }, [showPicker]);
+    }, [showEmojiPicker, showGifPicker]);
 
     const handleSendChat = () => {
         if (!id || !message.trim()) return;
@@ -86,6 +105,22 @@ export default function ChatWindow() {
 
     }
 
+    const handleSendGif = (url: string) => {
+        if (!id) return;
+
+        const content = JSON.stringify({
+            type: "gif",
+            content: url
+        });
+
+        const type = conversation?.type || 'people';
+        const to = conversation?.id || id;
+
+        sendChatMessage(type, to, content);
+
+        setShowGifPicker(false);
+    }
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     return (
@@ -94,6 +129,24 @@ export default function ChatWindow() {
             <div className={styles.messageArea}>
                 {currentMessages.length > 0 ? (
                     currentMessages.map((msg, index) => {
+                        let contentRender;
+                        try {
+                            const parsed = JSON.parse(msg.mes);
+
+                            if (parsed.type === "img" || parsed.type === "gif") {
+                                contentRender = (
+                                    <img src={parsed.content}
+                                         alt={parsed.type}
+                                         style={{maxWidth: '200px', borderRadius: '8px'}}
+                                    />
+                                )
+                            } else {
+                                contentRender = parsed.content || msg.mes;
+                            }
+                        } catch (e) {
+                            contentRender = msg.mes;
+                        }
+
                         const isMyMessage = msg.from === currentUser;
 
                         const timeString = msg.createAt ? new Date(msg.createAt).toLocaleTimeString([], {
@@ -114,7 +167,7 @@ export default function ChatWindow() {
                                 <div className={styles.bubbleWrapper}>
                                     <div
                                         className={`${styles.messageBubble} ${isMyMessage ? styles.bubbleMy : styles.bubbleTheir}`}>
-                                        {msg.mes}
+                                        {contentRender}
                                     </div>
                                     <span className={styles.messageTime}>
                                         {timeString}
@@ -135,7 +188,7 @@ export default function ChatWindow() {
                 <div className={styles.toolbar}>
 
                     <div className={styles.emojiWrapper}>
-                        {showPicker && (<div className={styles.pickerContainer} ref={pickerRef}>
+                        {showEmojiPicker && (<div className={styles.pickerContainer} ref={emojiPickerRef}>
                             <EmojiPicker
                                 onEmojiClick={onEmojiClick}
                                 width={300}
@@ -145,18 +198,35 @@ export default function ChatWindow() {
                         </div>)}
 
                         <button
-                            ref={btnRef}
-                            className={`${styles.toolBtn} ${showPicker ? styles.active : ''}`}
+                            ref={emojiBtnRef}
+                            className={`${styles.toolBtn} ${showEmojiPicker ? styles.active : ''}`}
                             title="Emoji"
-                            onClick={() => setShowPicker(!showPicker)}
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         >
                             <BsEmojiSmile size={20}/>
                         </button>
                     </div>
 
-                    <button className={styles.toolBtn} title="Đính kèm file">
-                        <BsPaperclip size={20}/>
-                    </button>
+                    <div className={styles.emojiWrapper}>
+                        {showGifPicker && (
+                            <div className={styles.pickerContainer} ref={gifPickerRef}>
+                                <GifPicker onGifSelect={handleSendGif}/>
+                            </div>
+                        )}
+
+                        <button
+                            ref={gifBtnRef}
+                            className={`${styles.toolBtn} ${showGifPicker ? styles.active : ''}`}
+                            title="Gửi GIF"
+                            onClick={() => {
+                                setShowGifPicker(!showGifPicker);
+                                setShowEmojiPicker(false);
+                            }}
+                        >
+                            <BsFiletypeGif size={20}/>
+                        </button>
+                    </div>
+
                     <button className={styles.toolBtn} title="Gửi ảnh">
                         <BsImage size={20}/>
                     </button>
