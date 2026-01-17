@@ -138,10 +138,11 @@ export const chatSlice = createSlice({
         // cập nhật last message
 
         // Xử lý tin nhắn đến
+        // Trong reducers của chatSlice.ts
         receiveMessage: (state, action: PayloadAction<any>) => {
             const { from, to, mes, type, createAt } = action.payload;
 
-            // Lấy ID người dùng hiện tại từ localStorage để biết tin nhắn là ĐẾN hay ĐI
+            // Lấy ID người dùng hiện tại
             const currentUser = localStorage.getItem('user') || '';
 
             let conversationId = "";
@@ -156,42 +157,51 @@ export const chatSlice = createSlice({
                 state.messages[conversationId] = [];
             }
 
-            // Thử parse mes để xem có phải là tin nhắn file/ảnh không
-            let messageType: 'text' | 'image' | 'file' = 'text';
-            let fileInfo = undefined;
-            let displayMes = mes;
+            // 2. Parse tin nhắn để xác định loại
+            let messageType: 'text' | 'image' | 'file' | 'gif' = 'text';
 
             try {
                 const parsed = JSON.parse(mes);
-                if (parsed.messageType && (parsed.messageType === 'image' || parsed.messageType === 'file')) {
-                    messageType = parsed.messageType;
-                    displayMes = parsed.content; // base64 của file
-                    fileInfo = parsed.fileInfo;
+                if (parsed.type === 'image' || parsed.type === 'file' || parsed.type === 'gif') {
+                    messageType = parsed.type;
                 }
             } catch (e) {
-                // Không phải JSON, giữ nguyên
+                // Không phải JSON, giữ nguyên text
             }
 
             const newMessage: Message = {
                 from,
                 to,
-                mes: displayMes,
+                mes,
                 type,
                 createAt: createAt || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                messageType,
-                fileInfo
+                messageType
             };
 
             state.messages[conversationId].push(newMessage);
 
-            // 2. Cập nhật Preview ở danh sách bên trái
+            // 3. Cập nhật preview ở danh sách bên trái
             const convIndex = state.conversations.findIndex(c => c.id === conversationId);
 
             if (convIndex !== -1) {
                 const targetConv = state.conversations[convIndex];
 
-                // Cập nhật nội dung và thời gian
-                targetConv.lastMessage = mes;
+                // Cập nhật last message
+                let previewText = mes;
+                try {
+                    const parsed = JSON.parse(mes);
+                    if (parsed.type === 'image') {
+                        previewText = '[Hình ảnh]';
+                    } else if (parsed.type === 'file') {
+                        previewText = `[File: ${parsed.fileInfo?.name || 'File'}]`;
+                    } else if (parsed.type === 'gif') {
+                        previewText = '[GIF]';
+                    }
+                } catch (e) {
+                    // Giữ nguyên text
+                }
+
+                targetConv.lastMessage = previewText;
                 targetConv.time = newMessage.createAt;
 
                 // Tăng unreadCount nếu tin nhắn đến từ người khác VÀ mình đang không mở hội thoại đó
@@ -199,10 +209,9 @@ export const chatSlice = createSlice({
                     targetConv.unreadCount += 1;
                 }
 
-                // 3. Đưa hội thoại lên đầu danh sách (Splice & Unshift)
+                // 4. Đưa hội thoại lên đầu danh sách
                 state.conversations.splice(convIndex, 1);
                 state.conversations.unshift(targetConv);
-
             }
         },
     },
