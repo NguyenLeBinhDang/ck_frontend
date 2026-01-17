@@ -5,7 +5,7 @@ export const encodeMessage = (message: string): string => {
     } catch (e) {
         return message;
     }
-}
+};
 
 export const decodeMessage = (message: string): string => {
     try {
@@ -14,7 +14,8 @@ export const decodeMessage = (message: string): string => {
     } catch (e) {
         return message;
     }
-}
+};
+
 export const getMessagePreview = (mes: string): string => {
     try {
         const parsed = JSON.parse(mes);
@@ -31,6 +32,7 @@ export const getMessagePreview = (mes: string): string => {
         return mes;
     }
 };
+
 export const getMessageType = (mes: string): 'text' | 'image' | 'file' | 'gif' => {
     try {
         const parsed = JSON.parse(mes);

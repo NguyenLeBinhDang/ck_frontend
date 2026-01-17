@@ -105,9 +105,8 @@
     overflow-y: auto;
     padding: 0;
 }
+
 /*addcontact*/
-/* Nút thêm liên hệ */
-/* Thay thế hoặc thêm vào styles của LeftSidebar */
 .addContactButton {
     display: flex;
     align-items: center;
