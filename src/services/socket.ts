@@ -9,6 +9,7 @@ import {
 import {decodeMessage, encodeMessage} from "./messageService";
 
 let socket: WebSocket | null = null;
+let isUserLogout: boolean = false;
 
 export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
@@ -26,6 +27,8 @@ export const connectWS = () => {
     socket.onopen = () => {
         console.log('Connected to server');
 
+        isUserLogout = false;
+
         const storedUsername = localStorage.getItem('user');
         const storedReLoginCode = localStorage.getItem('re_login_code');
 
@@ -37,7 +40,6 @@ export const connectWS = () => {
                     event: "RE_LOGIN",
                     data: {
                         user: storedUsername,
-                        // token: storedReLoginCode,// chỗ này api lưu là code ms đúng nè
                         code: storedReLoginCode
                     }
                 }
@@ -52,6 +54,11 @@ export const connectWS = () => {
             console.log(res);
             const {event, data, status} = res;
             switch (event) {
+                case "REGISTER":
+                    if (status.status === 'success') {
+                        alert("Tạo tài khoản thành công!");
+                    }
+                    break;
                 case "RE_LOGIN":
                 case "LOGIN":
                     if (status === "success") {
@@ -67,6 +74,7 @@ export const connectWS = () => {
 
                         getUserList();
                     } else {
+                        console.error("Đăng nhập thất bại.")
                         store.dispatch(loginFail());
                         logoutWS();
                     }
@@ -135,12 +143,25 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
-        logoutWS();
         console.log('Connection closed!');
+
+        if (!isUserLogout) {
+            console.log("Disconnected");
+            alert("Mất kết nối server! Vui lòng nhấn refresh.");
+        }
+
+        logoutWS();
+    }
+
+    socket.onerror = (e) => {
+        console.log('Received message from server', e);
+        socket?.close();
     }
 }
 
-const logoutWS = () => {
+export const logoutWS = () => {
+    isUserLogout = true;
+
     localStorage.removeItem('re_login_code');
     localStorage.removeItem('user');
 
@@ -158,9 +179,6 @@ const logoutWS = () => {
     socket = null;
 }
 
-// export const sendData = (data: any) => {
-//     socket?.send(JSON.stringify(data))
-// };
 export const sendData = (data: any) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(data));
@@ -169,6 +187,40 @@ export const sendData = (data: any) => {
     }
 };
 export const getSocket = () => socket;
+
+// Đăng nhập
+export const login = (user: string, pass: string) => {
+
+    const payload = {
+        action: "onchat",
+        data: {
+            event: "LOGIN",
+            data: {
+                "user": user,
+                "pass": pass
+            }
+        }
+    };
+
+    sendData(payload);
+}
+
+// Đăng kí
+export const register = (user: string, pass: string) => {
+
+    const payload = {
+        action: "onchat",
+        data: {
+            event: "REGISTER",
+            data: {
+                "user": user,
+                "pass": pass
+            }
+        }
+    };
+
+    sendData(payload);
+}
 
 // Lấy danh sách user list
 export const getUserList = () => {
@@ -216,7 +268,7 @@ export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string
         }
     });
 
-    // Optimistic Update: Hiển thị ngay phía client (tùy chọn)
+    // Optimistic Update: Hiển thị ngay phía client
     const currentUser = localStorage.getItem('user') || '';
     store.dispatch(receiveMessage({
         from: currentUser,
@@ -259,6 +311,8 @@ export const checkUserOnline = (userId: string) => {
         }
     });
 };
+
+// Kiểm tra user tồn tại
 export const checkUserExist = (username: string): Promise<boolean> => {
     return new Promise((resolve) => {
         const handleMessage = (e: MessageEvent) => {

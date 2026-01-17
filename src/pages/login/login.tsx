@@ -1,43 +1,27 @@
 import './login.css';
-import {useEffect, useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "../../redux/hooks";
-import {sendData} from "../../services/socket";
+import {useState} from "react";
+import {Link} from "react-router-dom";
+import {useAppDispatch} from "../../redux/hooks";
 import {loginRequest} from "../../redux/userSlice";
+import {login} from "../../services/socket";
 
 export default function Login() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
     const [error, setError] = useState('')
-    const {re_login_code} = useAppSelector(state => state.user);
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        if(re_login_code){
-            navigate("/chat");
-        }
-    }, [re_login_code,navigate])
 
     //send login request
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
+        // Thay đổi temp user trong redux
         dispatch(loginRequest(user))
 
-        const payload = {
-            action: "onchat",
-            data: {
-                event: "LOGIN",
-                data: {
-                    "user": user,
-                    "pass": pass
-                }
-            }
-        };
-
-        sendData(payload);
+        // Gọi api login
+        login(user, pass);
     };
 
     return (
@@ -72,7 +56,6 @@ export default function Login() {
                                                    className="form-control form-control-lg"
                                                    value={pass}
                                                    onChange={(e) => setPass(e.target.value)}
-                                                // required
                                             />
                                         </div>
                                         <p className="small mb-5 pb-lg-2"><a className="text-white-50" href="#!">Forgot

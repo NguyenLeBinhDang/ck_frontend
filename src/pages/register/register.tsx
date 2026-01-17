@@ -1,59 +1,20 @@
 import './register.css'
 
 import {useEffect, useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import {getSocket, sendData} from "../../services/socket";
+import {Link} from "react-router-dom";
+import {getSocket, register, sendData} from "../../services/socket";
 
 export default function Register() {
     const [user, setUser] = useState('')
     const [pass, setPass] = useState('')
     const [error, setError] = useState('')
 
-    useEffect(() => {
-        const socket = getSocket();
-
-        if (!socket) {
-            return;
-        }
-
-        socket.onmessage = (event) => {
-            try {
-                const response = JSON.parse(event.data);
-                if (response.event === 'REGISTER') {
-                    if (response.status === 'success') {
-                        alert("Tạo tài khoản thành công!");
-                    } else {
-                        setError(response.mes);
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
-
-        }
-        return () => {
-            if (socket) socket.onmessage = null;
-        }
-
-    }, [])
-
-
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        const payload = {
-            action: "onchat",
-            data: {
-                event: "REGISTER",
-                data: {
-                    "user": user,
-                    "pass": pass
-                }
-            }
-        };
-
-        sendData(payload);
+        // Gọi api register
+        register(user, pass);
     }
 
     return (
@@ -90,7 +51,6 @@ export default function Register() {
                                                    className="form-control form-control-lg"
                                                    value={pass}
                                                    onChange={(e) => setPass(e.target.value)}
-                                                // required
                                             />
                                         </div>
                                         <button data-mdb-button-init data-mdb-ripple-init

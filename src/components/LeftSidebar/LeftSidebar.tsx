@@ -1,20 +1,22 @@
 import React, {useState} from "react";
-import {FaPlus, FaSearch, FaSignOutAlt, FaUserCircle} from "react-icons/fa";
+import {FaPlus, FaSignOutAlt, FaUserCircle} from "react-icons/fa";
 import styles from "./LeftSidebar.module.css";
 import ConversationItem from "../conversationItem/ConversationItem";
 import {useNavigate} from "react-router-dom";
-import { RootState } from "../../redux/store";
-import { setActiveConversation } from "../../redux/chatSlice";
+import {RootState} from "../../redux/store";
+import {setActiveConversation} from "../../redux/chatSlice";
 import {useDispatch, useSelector} from "react-redux";
-import { AddContactModal } from "../addContactModal/AddContactModal";
+import {AddContactModal} from "../addContactModal/AddContactModal";
+import {logoutWS} from "../../services/socket";
 
 export default function LeftSidebar() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
     // Lấy dữ liệu từ Redux Store
-    const conversations = useSelector((state: RootState) => state?.chat.conversations|| []);
-    const activeId = useSelector((state: RootState) => state.chat.activeId|| null);
+    const conversations = useSelector((state: RootState) => state?.chat.conversations || []);
+    const activeId = useSelector((state: RootState) => state.chat.activeId || null);
 
     const handleSelect = (id: string) => {
         dispatch(setActiveConversation(id));
@@ -34,25 +36,13 @@ export default function LeftSidebar() {
                     </div>
 
                     {/* Logout Button */}
-                    <button className={styles.logoutBtn} title="Đăng xuất">
+                    <button className={styles.logoutBtn} title="Đăng xuất" onClick={() => logoutWS()}>
                         <FaSignOutAlt size={16}/>
                     </button>
                 </div>
             </div>
 
             <div className={styles.chatListWrapper}>
-                {/*<div className={styles.searchContainer}>*/}
-                {/*    <div className={styles.inputGroup}>*/}
-                {/*        <span className={styles.searchIcon}>*/}
-                {/*            <FaSearch size={16}/>*/}
-                {/*        </span>*/}
-                {/*        <input*/}
-                {/*            type="text"*/}
-                {/*            className={styles.searchInput}*/}
-                {/*            placeholder="Tìm kiếm..."*/}
-                {/*        />*/}
-                {/*    </div>*/}
-                {/*</div>*/}
                 <div className={styles.searchContainer}>
                     <div
                         className={styles.addContactButton}
@@ -68,7 +58,7 @@ export default function LeftSidebar() {
                     {/* --- BẮT ĐẦU VÒNG LẶP --- */}
                     {conversations.map((chat) => (
                         <ConversationItem
-                            key={chat.id} // BẮT BUỘC PHẢI CÓ KEY DUY NHẤT
+                            key={chat.id}
                             id={chat.id}
                             name={chat.name}
                             avatar={chat.avatar}
@@ -76,9 +66,7 @@ export default function LeftSidebar() {
                             time={chat.time}
                             unreadCount={chat.unreadCount}
                             isOnline={chat.isOnline}
-                            // Kiểm tra xem item này có đang được chọn không
                             isActive={activeId === chat.id}
-                            // Truyền hàm xử lý click
                             onSelect={handleSelect}
                         />
                     ))}

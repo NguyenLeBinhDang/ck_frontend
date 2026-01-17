@@ -9,7 +9,7 @@ interface Conversation {
     time: string;
     unreadCount: number;
     isOnline: boolean;
-    type:'people' | 'room';
+    type: 'people' | 'room';
 }
 
 export interface Message {
@@ -18,13 +18,13 @@ export interface Message {
     to: string;
     mes: string;
     type: 'people' | 'room';
-    createAt: string; // Thời gian hiển thị
-    messageType?: 'text' | 'image' | 'file' | 'gif'; // Thêm loại tin nhắn
-    fileInfo?: { // Thêm thông tin file
+    createAt: string;
+    messageType?: 'text' | 'image' | 'file' | 'gif';
+    fileInfo?: {
         name: string;
         size: number;
         mimeType: string;
-        url?: string; // URL local hoặc blob
+        url?: string;
     };
 }
 
@@ -32,14 +32,12 @@ interface ChatState {
     conversations: Conversation[];
     activeId: string | null; // ID của hội thoại đang mở
     messages: { [key: string]: Message[] }; // Lưu tin nhắn theo ID hội thoại: { "user1": [msg1, msg2] }
-    // userCheckResult: { username: string, exists: boolean } | null;
 }
 
 const initialState: ChatState = {
     conversations: [],
     activeId: null,
     messages: {},
-    // userCheckResult: null
 };
 
 export const chatSlice = createSlice({
@@ -56,27 +54,26 @@ export const chatSlice = createSlice({
 
         // Cập nhật danh sách user từ API GET_USER_LIST
         setConversations: (state, action: PayloadAction<any[]>) => {
-            // API trả về list user object, ta map sang format Conversation của UI
             state.conversations = action.payload.map((user: any) => ({
                 id: user.name,
                 name: user.name,
-                avatar: `https://ui-avatars.com/api/?name=${user.name}&background=random`, // Tạo avatar ngẫu nhiên
+                avatar: `https://ui-avatars.com/api/?name=${user.name}&background=random`,
                 lastMessage: "Chưa có tin nhắn",
-                time: user.actionTime ? new Date(user.actionTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "",
+                time: user.actionTime ? new Date(user.actionTime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : "",
                 unreadCount: 0,
                 isOnline: false,
-                type: user.type === 0 ? 'people' : 'room' // API trả type 0 là người
+                type: user.type === 0 ? 'people' : 'room'
             }));
         },
-        updateUserStatus: (state, action: PayloadAction<{id:String,isOnline: boolean }>) => {
-            const {id,isOnline} = action.payload
+        updateUserStatus: (state, action: PayloadAction<{ id: String, isOnline: boolean }>) => {
+            const {id, isOnline} = action.payload
             const conv = state.conversations.find(c => c.id === id);
-            if(conv) conv.isOnline = isOnline;
+            if (conv) conv.isOnline = isOnline;
 
         },
-        // setUserCheckResult: (state, action: PayloadAction<{ username: string, exists: boolean } | null>) => {
-        //     state.userCheckResult = action.payload;
-        // },
 
         addConversation: (state, action: PayloadAction<Conversation>) => {
             const existing = state.conversations.find(c => c.id === action.payload.id);
@@ -85,42 +82,38 @@ export const chatSlice = createSlice({
             }
         },
         setMessages: (state, action: PayloadAction<{ messages: any[], isHistory?: boolean }>) => {
-            const { messages } = action.payload;
+            const {messages} = action.payload;
             if (!messages || messages.length === 0) return;
 
             const currentUser = localStorage.getItem('user') || '';
             const firstMsg = messages[0];
 
-            // 1. Xác định ID hội thoại từ dữ liệu tin nhắn
+            // Xác định ID hội thoại từ dữ liệu tin nhắn
             let conversationId = "";
 
             // Kiểm tra xem đây là tin nhắn nhóm hay cá nhân dựa trên type hoặc ngữ cảnh
-
             const msgType = (firstMsg.type === 0 || firstMsg.type === 1) ? 'people' : 'room';
 
             if (msgType === 'room') {
-                conversationId = firstMsg.to; // Với Room, 'to' là tên phòng
+                // Với Room, 'to' là tên phòng
+                conversationId = firstMsg.to;
             } else {
-                //name ng gửi to là người nhận
-                // Nếu 'name' (người gửi) là mình -> Mình đang chat với 'to'
-                // Nếu 'name' (người gửi) là người khác -> Mình đang chat với 'name'
-                // hiện tại api chỉ trả vể to.
+                // name là người gửi to là người nhận
                 conversationId = firstMsg.name === currentUser ? firstMsg.to : firstMsg.name;
             }
-         
-            // Fallback: Nếu không tìm được từ tin nhắn (hiếm gặp), dùng activeId hiện tại
+
+            // Fallback: Nếu không tìm được từ tin nhắn, dùng activeId hiện tại
             if (!conversationId && state.activeId) {
                 conversationId = state.activeId;
             }
-            const conv= state.conversations.find(c => c.id === conversationId);
+            const conv = state.conversations.find(c => c.id === conversationId);
             if (conv) {
-                // conv.lastMessage = firstMsg.mes;
                 //cập nhật preview
                 conv.lastMessage = getMessagePreview(firstMsg.mes);
                 conv.time = firstMsg.createAt;
             }
             if (conversationId) {
-                // 2. Map dữ liệu API sang format UI
+                //Map dữ liệu API sang format UI
                 const formattedMessages: Message[] = messages.map((m: any) => ({
                     id: m.id,
                     from: m.name,
@@ -131,10 +124,7 @@ export const chatSlice = createSlice({
                     messageType: getMessageType(m.mes)
                 }));
 
-                // 3. Lưu vào store
-                // API thường trả tin nhắn mới nhất ở đầu mảng (Index 0 là mới nhất)
-                // Nhưng UI Chat thường render từ trên xuống (Cũ -> Mới)
-                // Nên ta cần reverse lại để tin nhắn cũ nhất nằm ở index 0
+                // Reverse lại để tin nhắn cũ nhất nằm ở index 0
                 state.messages[conversationId] = formattedMessages.reverse();
 
             }
@@ -144,7 +134,7 @@ export const chatSlice = createSlice({
         // Xử lý tin nhắn đến
         // Trong reducers của chatSlice.ts
         receiveMessage: (state, action: PayloadAction<any>) => {
-            const { from, to, mes, type, createAt } = action.payload;
+            const {from, to, mes, type, createAt} = action.payload;
 
             // Lấy ID người dùng hiện tại
             const currentUser = localStorage.getItem('user') || '';
@@ -168,7 +158,7 @@ export const chatSlice = createSlice({
                 to,
                 mes,
                 type,
-                createAt: createAt || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                createAt: createAt || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
                 messageType
             };
 
@@ -197,5 +187,12 @@ export const chatSlice = createSlice({
     },
 });
 
-export const { setActiveConversation, setConversations, receiveMessage, setMessages,updateUserStatus,addConversation } = chatSlice.actions;
+export const {
+    setActiveConversation,
+    setConversations,
+    receiveMessage,
+    setMessages,
+    updateUserStatus,
+    addConversation
+} = chatSlice.actions;
 export default chatSlice.reducer;

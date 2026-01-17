@@ -1,5 +1,5 @@
 import React from 'react';
-import item from './ConversationItem.module.css'; // Import như một object
+import item from './ConversationItem.module.css';
 
 interface Props {
     id: string;

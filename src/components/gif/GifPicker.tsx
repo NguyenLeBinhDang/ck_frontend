@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './GifPicker.module.css';
-import { getTrendingGifs, searchGifs } from '../../services/giphyService'; // Đổi import sang giphyService
+import { getTrendingGifs, searchGifs } from '../../services/giphyService';
 import { BsSearch } from "react-icons/bs";
 
 interface GifPickerProps {
@@ -69,7 +69,6 @@ export default function GifPicker({ onGifSelect }: GifPickerProps) {
                                 onGifSelect(gif.images.downsized.url);
                             }}
                         >
-                            {/* GIPHY: Khi hiển thị list, dùng fixed_height_small để load nhanh và đều */}
                             <img
                                 src={gif.images.fixed_height_small.url}
                                 alt={gif.title}
@@ -79,7 +78,7 @@ export default function GifPicker({ onGifSelect }: GifPickerProps) {
                     ))
                 )}
             </div>
-            {/* Logo Giphy bắt buộc theo chính sách của họ (Optional nhưng nên có) */}
+            {/* Logo Giphy bắt buộc theo chính sách của họ */}
             <div style={{textAlign: 'right', padding: '0 5px', fontSize: '10px', color: '#ccc'}}>
                 Powered by GIPHY
             </div>
