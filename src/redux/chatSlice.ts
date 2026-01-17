@@ -68,6 +68,8 @@ export const chatSlice = createSlice({
                 type: user.type === 0 ? 'people' : 'room'
             }));
         },
+
+        // Cập nhật trạng thái online cảu user
         updateUserStatus: (state, action: PayloadAction<{ id: String, isOnline: boolean }>) => {
             const {id, isOnline} = action.payload
             const conv = state.conversations.find(c => c.id === id);
@@ -81,6 +83,8 @@ export const chatSlice = createSlice({
                 state.conversations.unshift(action.payload);
             }
         },
+
+
         setMessages: (state, action: PayloadAction<{ messages: any[], isHistory?: boolean }>) => {
             const {messages} = action.payload;
             if (!messages || messages.length === 0) return;
@@ -129,10 +133,8 @@ export const chatSlice = createSlice({
 
             }
         },
-        // cập nhật last message
 
         // Xử lý tin nhắn đến
-        // Trong reducers của chatSlice.ts
         receiveMessage: (state, action: PayloadAction<any>) => {
             const {from, to, mes, type, createAt} = action.payload;
 
@@ -146,7 +148,7 @@ export const chatSlice = createSlice({
                 conversationId = from === currentUser ? to : from;
             }
 
-            // 1. Thêm tin nhắn vào lịch sử chat
+            // Thêm tin nhắn vào lịch sử chat
             if (!state.messages[conversationId]) {
                 state.messages[conversationId] = [];
 
@@ -164,7 +166,7 @@ export const chatSlice = createSlice({
 
             state.messages[conversationId].push(newMessage);
 
-            // 3. Cập nhật preview ở danh sách bên trái
+            // Cập nhật preview ở danh sách bên trái
             const convIndex = state.conversations.findIndex(c => c.id === conversationId);
 
             if (convIndex !== -1) {
@@ -174,12 +176,12 @@ export const chatSlice = createSlice({
                 targetConv.lastMessage = getMessagePreview(mes);
                 targetConv.time = newMessage.createAt;
 
-                // Tăng unreadCount nếu tin nhắn đến từ người khác VÀ mình đang không mở hội thoại đó
+                // Tăng unreadCount nếu tin nhắn đến từ người khác Vvà mình đang không mở hội thoại đó
                 if (from !== currentUser && state.activeId !== conversationId) {
                     targetConv.unreadCount += 1;
                 }
 
-                // 4. Đưa hội thoại lên đầu danh sách
+                // Đưa hội thoại lên đầu danh sách
                 state.conversations.splice(convIndex, 1);
                 state.conversations.unshift(targetConv);
             }

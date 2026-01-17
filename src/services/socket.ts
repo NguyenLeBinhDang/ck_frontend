@@ -74,7 +74,7 @@ export const connectWS = () => {
 
                         getUserList();
                     } else {
-                        console.error("Đăng nhập thất bại.")
+                        console.error("Login Failed.")
                         store.dispatch(loginFail());
                         logoutWS();
                     }
