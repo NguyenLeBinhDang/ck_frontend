@@ -8,7 +8,6 @@ export const RootLayout = () => {
     const location = useLocation();
     const publicPaths = ["/login", "/register"];
 
-
     const {re_login_code} = useAppSelector(state => state.user);
 
     useEffect(() => {
