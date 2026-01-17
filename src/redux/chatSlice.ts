@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {getMessagePreview, getMessageType} from '../services/messageService';
 
 interface Conversation {
     id: string;
@@ -18,6 +19,13 @@ export interface Message {
     mes: string;
     type: 'people' | 'room';
     createAt: string; // Thời gian hiển thị
+    messageType?: 'text' | 'image' | 'file' | 'gif'; // Thêm loại tin nhắn
+    fileInfo?: { // Thêm thông tin file
+        name: string;
+        size: number;
+        mimeType: string;
+        url?: string; // URL local hoặc blob
+    };
 }
 
 interface ChatState {
@@ -80,7 +88,7 @@ export const chatSlice = createSlice({
             const { messages } = action.payload;
             if (!messages || messages.length === 0) return;
 
-            const currentUser = localStorage.getItem('user') || ''; // dòng này nữa sẽ cập nhât lấy user từ action
+            const currentUser = localStorage.getItem('user') || '';
             const firstMsg = messages[0];
 
             // 1. Xác định ID hội thoại từ dữ liệu tin nhắn
@@ -106,7 +114,9 @@ export const chatSlice = createSlice({
             }
             const conv= state.conversations.find(c => c.id === conversationId);
             if (conv) {
-                conv.lastMessage = firstMsg.mes;
+                // conv.lastMessage = firstMsg.mes;
+                //cập nhật preview
+                conv.lastMessage = getMessagePreview(firstMsg.mes);
                 conv.time = firstMsg.createAt;
             }
             if (conversationId) {
@@ -117,7 +127,8 @@ export const chatSlice = createSlice({
                     to: m.to,
                     mes: m.mes,
                     type: (m.type === 0 || m.type === 1) ? 'people' : 'room',
-                    createAt: m.createAt
+                    createAt: m.createAt,
+                    messageType: getMessageType(m.mes)
                 }));
 
                 // 3. Lưu vào store
@@ -131,10 +142,11 @@ export const chatSlice = createSlice({
         // cập nhật last message
 
         // Xử lý tin nhắn đến
+        // Trong reducers của chatSlice.ts
         receiveMessage: (state, action: PayloadAction<any>) => {
-            const { from, to, mes, type,createAt } = action.payload;
+            const { from, to, mes, type, createAt } = action.payload;
 
-            // Lấy ID người dùng hiện tại từ localStorage để biết tin nhắn là ĐẾN hay ĐI
+            // Lấy ID người dùng hiện tại
             const currentUser = localStorage.getItem('user') || '';
 
             let conversationId = "";
@@ -147,26 +159,29 @@ export const chatSlice = createSlice({
             // 1. Thêm tin nhắn vào lịch sử chat
             if (!state.messages[conversationId]) {
                 state.messages[conversationId] = [];
+
             }
+            const messageType = getMessageType(mes);
 
             const newMessage: Message = {
                 from,
                 to,
                 mes,
                 type,
-                createAt:createAt|| new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                createAt: createAt || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                messageType
             };
 
             state.messages[conversationId].push(newMessage);
 
-            // 2. Cập nhật Preview ở danh sách bên trái
+            // 3. Cập nhật preview ở danh sách bên trái
             const convIndex = state.conversations.findIndex(c => c.id === conversationId);
 
             if (convIndex !== -1) {
                 const targetConv = state.conversations[convIndex];
 
-                // Cập nhật nội dung và thời gian
-                targetConv.lastMessage = mes;
+                // Cập nhật last message
+                targetConv.lastMessage = getMessagePreview(mes);
                 targetConv.time = newMessage.createAt;
 
                 // Tăng unreadCount nếu tin nhắn đến từ người khác VÀ mình đang không mở hội thoại đó
@@ -174,10 +189,9 @@ export const chatSlice = createSlice({
                     targetConv.unreadCount += 1;
                 }
 
-                // 3. Đưa hội thoại lên đầu danh sách (Splice & Unshift)
+                // 4. Đưa hội thoại lên đầu danh sách
                 state.conversations.splice(convIndex, 1);
                 state.conversations.unshift(targetConv);
-
             }
         },
     },
