@@ -135,6 +135,7 @@ export const connectWS = () => {
     }
 
     socket.onclose = () => {
+        logoutWS();
         console.log('Connection closed!');
     }
 }
@@ -201,14 +202,17 @@ export const joinRoom = (roomName: string) => {
 
 // Gửi tin nhắn
 export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string) => {
-    // Gửi lên server
     const encodedMessage = encodeMessage(mes);
 
     sendData({
         action: "onchat",
         data: {
             event: "SEND_CHAT",
-            data: {type: type, to: to, mes: encodedMessage}
+            data: {
+                type: type,
+                to: to,
+                mes: encodedMessage
+            }
         }
     });
 
