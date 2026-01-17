@@ -30,11 +30,6 @@ export default function LeftSidebar() {
 
                 <div className={styles.bottomActions}>
 
-                    {/* Avatar */}
-                    <div className={styles.avatar} title="Thông tin cá nhân">
-                        <FaUserCircle size={38}/>
-                    </div>
-
                     {/* Logout Button */}
                     <button className={styles.logoutBtn} title="Đăng xuất" onClick={() => logoutWS()}>
                         <FaSignOutAlt size={16}/>
