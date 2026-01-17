@@ -92,6 +92,9 @@ export const chatSlice = createSlice({
             const currentUser = localStorage.getItem('user') || '';
             const firstMsg = messages[0];
 
+            // Kiểm tra xem phải tin nhắn của mình hay không
+            const isMyMessage = firstMsg.name === currentUser;
+
             // Xác định ID hội thoại từ dữ liệu tin nhắn
             let conversationId = "";
 
@@ -103,7 +106,7 @@ export const chatSlice = createSlice({
                 conversationId = firstMsg.to;
             } else {
                 // name là người gửi to là người nhận
-                conversationId = firstMsg.name === currentUser ? firstMsg.to : firstMsg.name;
+                conversationId = isMyMessage ? firstMsg.to : firstMsg.name;
             }
 
             // Fallback: Nếu không tìm được từ tin nhắn, dùng activeId hiện tại
@@ -113,7 +116,7 @@ export const chatSlice = createSlice({
             const conv = state.conversations.find(c => c.id === conversationId);
             if (conv) {
                 //cập nhật preview
-                conv.lastMessage = getMessagePreview(firstMsg.mes);
+                conv.lastMessage = isMyMessage ? "Bạn: " + getMessagePreview(firstMsg.mes) : getMessagePreview(firstMsg.mes);
                 conv.time = firstMsg.createAt;
             }
             if (conversationId) {
