@@ -208,7 +208,7 @@ export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string
         action: "onchat",
         data: {
             event: "SEND_CHAT",
-            data: {type: type, to: to, mes: encodedMessage}
+            data: {type,  to, mes: encodedMessage}
         }
     });
 

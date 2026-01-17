@@ -18,6 +18,13 @@ export interface Message {
     mes: string;
     type: 'people' | 'room';
     createAt: string; // Thời gian hiển thị
+    messageType?: 'text' | 'image' | 'file' | 'gif'; // Thêm loại tin nhắn
+    fileInfo?: { // Thêm thông tin file
+        name: string;
+        size: number;
+        mimeType: string;
+        url?: string; // URL local hoặc blob
+    };
 }
 
 interface ChatState {
@@ -80,7 +87,7 @@ export const chatSlice = createSlice({
             const { messages } = action.payload;
             if (!messages || messages.length === 0) return;
 
-            const currentUser = localStorage.getItem('user') || ''; // dòng này nữa sẽ cập nhât lấy user từ action
+            const currentUser = localStorage.getItem('user') || '';
             const firstMsg = messages[0];
 
             // 1. Xác định ID hội thoại từ dữ liệu tin nhắn
@@ -132,7 +139,7 @@ export const chatSlice = createSlice({
 
         // Xử lý tin nhắn đến
         receiveMessage: (state, action: PayloadAction<any>) => {
-            const { from, to, mes, type,createAt } = action.payload;
+            const { from, to, mes, type, createAt } = action.payload;
 
             // Lấy ID người dùng hiện tại từ localStorage để biết tin nhắn là ĐẾN hay ĐI
             const currentUser = localStorage.getItem('user') || '';
@@ -149,12 +156,30 @@ export const chatSlice = createSlice({
                 state.messages[conversationId] = [];
             }
 
+            // Thử parse mes để xem có phải là tin nhắn file/ảnh không
+            let messageType: 'text' | 'image' | 'file' = 'text';
+            let fileInfo = undefined;
+            let displayMes = mes;
+
+            try {
+                const parsed = JSON.parse(mes);
+                if (parsed.messageType && (parsed.messageType === 'image' || parsed.messageType === 'file')) {
+                    messageType = parsed.messageType;
+                    displayMes = parsed.content; // base64 của file
+                    fileInfo = parsed.fileInfo;
+                }
+            } catch (e) {
+                // Không phải JSON, giữ nguyên
+            }
+
             const newMessage: Message = {
                 from,
                 to,
-                mes,
+                mes: displayMes,
                 type,
-                createAt:createAt|| new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                createAt: createAt || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                messageType,
+                fileInfo
             };
 
             state.messages[conversationId].push(newMessage);
