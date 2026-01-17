@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {getMessagePreview, getMessageType} from '../services/messageService';
 
 interface Conversation {
     id: string;
@@ -113,7 +114,9 @@ export const chatSlice = createSlice({
             }
             const conv= state.conversations.find(c => c.id === conversationId);
             if (conv) {
-                conv.lastMessage = firstMsg.mes;
+                // conv.lastMessage = firstMsg.mes;
+                //cập nhật preview
+                conv.lastMessage = getMessagePreview(firstMsg.mes);
                 conv.time = firstMsg.createAt;
             }
             if (conversationId) {
@@ -124,7 +127,8 @@ export const chatSlice = createSlice({
                     to: m.to,
                     mes: m.mes,
                     type: (m.type === 0 || m.type === 1) ? 'people' : 'room',
-                    createAt: m.createAt
+                    createAt: m.createAt,
+                    messageType: getMessageType(m.mes)
                 }));
 
                 // 3. Lưu vào store
@@ -155,19 +159,9 @@ export const chatSlice = createSlice({
             // 1. Thêm tin nhắn vào lịch sử chat
             if (!state.messages[conversationId]) {
                 state.messages[conversationId] = [];
-            }
 
-            // 2. Parse tin nhắn để xác định loại
-            let messageType: 'text' | 'image' | 'file' | 'gif' = 'text';
-
-            try {
-                const parsed = JSON.parse(mes);
-                if (parsed.type === 'image' || parsed.type === 'file' || parsed.type === 'gif') {
-                    messageType = parsed.type;
-                }
-            } catch (e) {
-                // Không phải JSON, giữ nguyên text
             }
+            const messageType = getMessageType(mes);
 
             const newMessage: Message = {
                 from,
@@ -187,21 +181,7 @@ export const chatSlice = createSlice({
                 const targetConv = state.conversations[convIndex];
 
                 // Cập nhật last message
-                let previewText = mes;
-                try {
-                    const parsed = JSON.parse(mes);
-                    if (parsed.type === 'image') {
-                        previewText = '[Hình ảnh]';
-                    } else if (parsed.type === 'file') {
-                        previewText = `[File: ${parsed.fileInfo?.name || 'File'}]`;
-                    } else if (parsed.type === 'gif') {
-                        previewText = '[GIF]';
-                    }
-                } catch (e) {
-                    // Giữ nguyên text
-                }
-
-                targetConv.lastMessage = previewText;
+                targetConv.lastMessage = getMessagePreview(mes);
                 targetConv.time = newMessage.createAt;
 
                 // Tăng unreadCount nếu tin nhắn đến từ người khác VÀ mình đang không mở hội thoại đó
