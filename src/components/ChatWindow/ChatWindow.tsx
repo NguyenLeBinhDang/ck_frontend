@@ -3,10 +3,11 @@ import {BsEmojiSmile, BsImage, BsPaperclip, BsSend} from "react-icons/bs";
 import styles from "./ChatWindow.module.css";
 import EmojiPicker, {EmojiClickData} from "emoji-picker-react";
 import {useParams} from "react-router-dom";
-import {useSelector,useDispatch} from "react-redux";
-import { RootState } from "../../redux/store";
-import { setActiveConversation } from "../../redux/chatSlice";
-import {getPeopleChatMes, getRoomChatMes} from "../../services/socket";
+import {useSelector, useDispatch} from "react-redux";
+import {RootState} from "../../redux/store";
+import {setActiveConversation} from "../../redux/chatSlice";
+import {getPeopleChatMes, getRoomChatMes, sendChatMessage} from "../../services/socket";
+
 export default function ChatWindow() {
 
     const {id} = useParams();
@@ -73,45 +74,50 @@ export default function ChatWindow() {
         }
     }, [showPicker]);
 
+    const handleSendChat = () => {
+        if (!id || !message.trim()) return;
+
+        const type = conversation?.type || 'people';
+        const to = conversation?.id || id;
+
+        sendChatMessage(type, to, message);
+
+        setMessage("");
+
+    }
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     return (
         <div className={styles.windowContainer}>
-            {/*<div className={styles.messageArea}>*/}
-            {/*    <div className={`${styles.messageBubble} ${styles.myMessage}`}>*/}
-            {/*        <p>ABCD</p>*/}
-            {/*    </div>*/}
-
-            {/*    <div className={`${styles.messageBubble} ${styles.theirMessage}`}>*/}
-            {/*        <p>ABCD</p>*/}
-            {/*    </div>*/}
-            {/*</div>*/}
-
             {/* --- MESSAGE LIST --- */}
             <div className={styles.messageArea}>
                 {currentMessages.length > 0 ? (
                     currentMessages.map((msg, index) => {
-                        // Kiểm tra xem tin nhắn này là của "mình" (sent) hay "họ" (received)
-                        // msg.from === currentUser => sent
                         const isMyMessage = msg.from === currentUser;
+
+                        const timeString = msg.createAt ? new Date(msg.createAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : '';
 
                         return (
                             <div
                                 key={index}
-                                className={`${styles.messageRow} ${isMyMessage ? styles.myMessage : styles.theirMessage}`}
+                                className={`${styles.messageRow} ${isMyMessage ? styles.rowRight : styles.rowLeft}`}
                             >
                                 {!isMyMessage && (
                                     <div className={styles.messageAvatar}>
-                                        {msg.from.charAt(0)}
+                                        {msg.from ? msg.from.charAt(0) : ''}
                                     </div>
                                 )}
                                 <div className={styles.bubbleWrapper}>
-                                    <div className={styles.bubble}>
+                                    <div
+                                        className={`${styles.messageBubble} ${isMyMessage ? styles.bubbleMy : styles.bubbleTheir}`}>
                                         {msg.mes}
                                     </div>
                                     <span className={styles.messageTime}>
-                                        {/* Format lại thời gian nếu cần */}
-                                        {msg.createAt?.split(' ')[1] || msg.createAt}
+                                        {timeString}
                                     </span>
                                 </div>
                             </div>
@@ -122,8 +128,7 @@ export default function ChatWindow() {
                         <p>Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!</p>
                     </div>
                 )}
-                {/* Div ảo để cuộn xuống cuối */}
-                <div ref={messagesEndRef} />
+                <div ref={messagesEndRef}/>
             </div>
             <div className={styles.footer}>
 
@@ -166,7 +171,9 @@ export default function ChatWindow() {
                         onChange={(e) => setMessage(e.target.value)}
                     ></textarea>
 
-                    <button className={styles.sendBtn}>
+                    <button className={styles.sendBtn} onClick={() => {
+                        handleSendChat()
+                    }}>
                         <BsSend size={18}/>
                     </button>
                 </div>
