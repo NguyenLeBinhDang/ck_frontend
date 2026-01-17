@@ -1,5 +1,3 @@
-// const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME!;
-// const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET!;
 const CLOUD_NAME = 'duej7j4zr';
 const UPLOAD_PRESET = 'CHATAPP';
 export interface UploadResult {

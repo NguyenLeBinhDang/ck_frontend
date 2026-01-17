@@ -54,6 +54,11 @@ export const connectWS = () => {
             console.log(res);
             const {event, data, status} = res;
             switch (event) {
+                case "REGISTER":
+                    if (status.status === 'success') {
+                        alert("Tạo tài khoản thành công!");
+                    }
+                    break;
                 case "RE_LOGIN":
                 case "LOGIN":
                     if (status === "success") {
@@ -154,7 +159,7 @@ export const connectWS = () => {
     }
 }
 
-const logoutWS = () => {
+export const logoutWS = () => {
     isUserLogout = true;
 
     localStorage.removeItem('re_login_code');
@@ -174,9 +179,6 @@ const logoutWS = () => {
     socket = null;
 }
 
-// export const sendData = (data: any) => {
-//     socket?.send(JSON.stringify(data))
-// };
 export const sendData = (data: any) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(data));
@@ -185,6 +187,40 @@ export const sendData = (data: any) => {
     }
 };
 export const getSocket = () => socket;
+
+// Đăng nhập
+export const login = (user: string, pass: string) => {
+
+    const payload = {
+        action: "onchat",
+        data: {
+            event: "LOGIN",
+            data: {
+                "user": user,
+                "pass": pass
+            }
+        }
+    };
+
+    sendData(payload);
+}
+
+// Đăng kí
+export const register = (user: string, pass: string) => {
+
+    const payload = {
+        action: "onchat",
+        data: {
+            event: "REGISTER",
+            data: {
+                "user": user,
+                "pass": pass
+            }
+        }
+    };
+
+    sendData(payload);
+}
 
 // Lấy danh sách user list
 export const getUserList = () => {
@@ -232,7 +268,7 @@ export const sendChatMessage = (type: 'people' | 'room', to: string, mes: string
         }
     });
 
-    // Optimistic Update: Hiển thị ngay phía client (tùy chọn)
+    // Optimistic Update: Hiển thị ngay phía client
     const currentUser = localStorage.getItem('user') || '';
     store.dispatch(receiveMessage({
         from: currentUser,
@@ -275,6 +311,8 @@ export const checkUserOnline = (userId: string) => {
         }
     });
 };
+
+// Kiểm tra user tồn tại
 export const checkUserExist = (username: string): Promise<boolean> => {
     return new Promise((resolve) => {
         const handleMessage = (e: MessageEvent) => {

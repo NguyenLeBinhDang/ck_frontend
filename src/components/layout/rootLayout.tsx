@@ -1,12 +1,13 @@
 import React, {useEffect} from 'react';
 import {Outlet, useNavigate, useLocation} from "react-router-dom";
 import {connectWS} from "../../services/socket";
-import {useAppDispatch, useAppSelector} from "../../redux/hooks";
+import {useAppSelector} from "../../redux/hooks";
 
 export const RootLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    // const dispatch = useAppDispatch();
+    const publicPaths = ["/login", "/register"];
+
 
     const {re_login_code} = useAppSelector(state => state.user);
 
@@ -16,13 +17,11 @@ export const RootLayout = () => {
 
     useEffect(() => {
         if (!re_login_code) {
-            if (location.pathname !== "/login") {
+            if (!publicPaths.includes(location.pathname)) {
                 navigate("/login");
             }
-        } else {
-            if (location.pathname === "/login" || location.pathname === "/") {
-                navigate("/chat");
-            }
+        } else if (publicPaths.includes(location.pathname) || location.pathname === "/") {
+            navigate("/chat");
         }
     }, [re_login_code, navigate, location.pathname]);
 

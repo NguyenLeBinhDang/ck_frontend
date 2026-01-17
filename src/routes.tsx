@@ -12,21 +12,20 @@ export const routes = createBrowserRouter([
         element: <RootLayout/>,
         children: [
             {
-                path: "/login",
+                path: "login",
                 element: <Login/>
             },
             {
-                path: "/register",
+                path: "register",
                 element: <Register/>
             },
             {
-                path: "/chat",
+                path: "chat",
                 element: <ChatLayout/>,
                 children: [
                     {
                         index: true,
                         element: <ChatWelcome/>
-
                     },
                     {
                         path: ":id",

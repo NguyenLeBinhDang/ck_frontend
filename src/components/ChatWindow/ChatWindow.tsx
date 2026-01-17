@@ -9,7 +9,7 @@ import {setActiveConversation} from "../../redux/chatSlice";
 import {getPeopleChatMes, getRoomChatMes, sendChatMessage} from "../../services/socket";
 import GifPicker from "../gif/GifPicker";
 
-import { uploadToCloudinary } from "../../services/cloudinaryService";
+import {uploadToCloudinary} from "../../services/cloudinaryService";
 
 export default function ChatWindow() {
     const {id} = useParams();
@@ -126,7 +126,7 @@ export default function ChatWindow() {
         setShowGifPicker(false);
     }
 
-
+    // Gửi File
     const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, folder: "chat-images" | "chat-files") => {
         const files = e.target.files;
         if (!files?.length || !id) return;
@@ -183,7 +183,7 @@ export default function ChatWindow() {
                     return (
                         <div className={styles.fileContainer}>
                             <div className={styles.fileIcon}>
-                                <BsPaperclip size={20} />
+                                <BsPaperclip size={20}/>
                             </div>
                             <div className={styles.fileDetails}>
                                 <span className={styles.fileName}>{parsed.name}</span>
@@ -198,7 +198,7 @@ export default function ChatWindow() {
                                 className={styles.downloadButton}
                                 title="Tải xuống"
                             >
-                                <BsDownload size={16} />
+                                <BsDownload size={16}/>
                             </a>
                         </div>
                     );
@@ -247,7 +247,8 @@ export default function ChatWindow() {
                                     </div>
                                 )}
                                 <div className={styles.bubbleWrapper}>
-                                    <div className={`${styles.messageBubble} ${isMyMessage ? styles.bubbleMy : styles.bubbleTheir}`}>
+                                    <div
+                                        className={`${styles.messageBubble} ${isMyMessage ? styles.bubbleMy : styles.bubbleTheir}`}>
                                         {renderMessageContent(msg)}
                                     </div>
                                     <span className={styles.messageTime}>{timeString}</span>
@@ -264,10 +265,10 @@ export default function ChatWindow() {
             </div>
 
             {/* Hidden File Inputs */}
-            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="*/*"
-                   onChange={(e) => handleUploadFile(e, "chat-files")} />
-            <input type="file" ref={imageInputRef} style={{ display: 'none' }} accept="image/*"
-                   onChange={(e) => handleUploadFile(e, "chat-images")} />
+            <input type="file" ref={fileInputRef} style={{display: 'none'}} accept="*/*"
+                   onChange={(e) => handleUploadFile(e, "chat-files")}/>
+            <input type="file" ref={imageInputRef} style={{display: 'none'}} accept="image/*"
+                   onChange={(e) => handleUploadFile(e, "chat-images")}/>
 
             {/* Footer */}
             <div className={styles.footer}>
@@ -277,11 +278,15 @@ export default function ChatWindow() {
                         {showEmojiPicker && (
                             <div className={styles.pickerContainer} ref={emojiPickerRef}>
                                 <EmojiPicker onEmojiClick={onEmojiClick} width={300} height={300}
-                                             previewConfig={{showPreview: false}} />
+                                             previewConfig={{showPreview: false}}/>
                             </div>
                         )}
-                        <button ref={emojiBtnRef} className={`${styles.toolBtn} ${showEmojiPicker ? styles.active : ''}`}
-                                title="Emoji" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false); }}>
+                        <button ref={emojiBtnRef}
+                                className={`${styles.toolBtn} ${showEmojiPicker ? styles.active : ''}`}
+                                title="Emoji" onClick={() => {
+                            setShowEmojiPicker(!showEmojiPicker);
+                            setShowGifPicker(false);
+                        }}>
                             <BsEmojiSmile size={20}/>
                         </button>
                     </div>
@@ -294,16 +299,21 @@ export default function ChatWindow() {
                             </div>
                         )}
                         <button ref={gifBtnRef} className={`${styles.toolBtn} ${showGifPicker ? styles.active : ''}`}
-                                title="Gửi GIF" onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); }}>
+                                title="Gửi GIF" onClick={() => {
+                            setShowGifPicker(!showGifPicker);
+                            setShowEmojiPicker(false);
+                        }}>
                             <BsFiletypeGif size={20}/>
                         </button>
                     </div>
 
                     {/* Image & File */}
-                    <button className={styles.toolBtn} title="Gửi ảnh" onClick={() => imageInputRef.current?.click()} disabled={uploading}>
+                    <button className={styles.toolBtn} title="Gửi ảnh" onClick={() => imageInputRef.current?.click()}
+                            disabled={uploading}>
                         <BsImage size={20}/>
                     </button>
-                    <button className={styles.toolBtn} title="Đính kèm file" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    <button className={styles.toolBtn} title="Đính kèm file"
+                            onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                         <BsPaperclip size={20}/>
                     </button>
                 </div>
@@ -311,7 +321,7 @@ export default function ChatWindow() {
                 <div className={styles.inputGroup}>
                     <textarea className={styles.inputField} rows={1} placeholder="Nhập tin nhắn..."
                               value={message} onChange={(e) => setMessage(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendChat())} />
+                              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendChat())}/>
 
                     <button className={styles.sendBtn} onClick={handleSendChat} disabled={!message.trim() || uploading}>
                         <BsSend size={18}/>
