@@ -18,6 +18,7 @@ export const RootLayout = () => {
         if (!re_login_code) {
             if (!publicPaths.includes(location.pathname)) {
                 navigate("/login");
+                connectWS();
             }
         } else if (publicPaths.includes(location.pathname) || location.pathname === "/") {
             navigate("/chat");
