@@ -148,6 +148,8 @@ export const chatSlice = createSlice({
 
             // Lấy ID người dùng hiện tại
             const currentUser = localStorage.getItem('user') || '';
+            // Kiểm tra xem phải tin nhắn của mình hay không
+            const isMyMessage = from === currentUser;
 
             let conversationId = "";
             if (type === 'room') {
@@ -181,7 +183,7 @@ export const chatSlice = createSlice({
                 const targetConv = state.conversations[convIndex];
 
                 // Cập nhật last message
-                targetConv.lastMessage = getMessagePreview(mes);
+                targetConv.lastMessage = isMyMessage ? 'Bạn:' + getMessagePreview(mes) : getMessagePreview(mes);
                 targetConv.time = newMessage.createAt;
 
                 // Tăng unreadCount nếu tin nhắn đến từ người khác VÀ mình đang không mở hội thoại đó
