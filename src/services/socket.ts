@@ -10,7 +10,9 @@ import {decodeMessage, encodeMessage} from "./messageService";
 
 let socket: WebSocket | null = null;
 let isUserLogout: boolean = false;
-
+let reconnectAttempts = 0;
+let reconnectTimer: any = null;
+const MAX_RETRY = 3;
 export const connectWS = () => {
     const url = process.env.REACT_APP_WS_URL;
     if (!url) {
@@ -26,7 +28,7 @@ export const connectWS = () => {
 
     socket.onopen = () => {
         console.log('Connected to server');
-
+        reconnectAttempts=0;
         isUserLogout = false;
 
         const storedUsername = localStorage.getItem('user');
@@ -71,7 +73,7 @@ export const connectWS = () => {
                         }
                         if (code) localStorage.setItem('re_login_code', code);
                         store.dispatch(loginSuccess(code));
-
+                        isUserLogout = false;
                         getUserList();
                     } else {
                         console.error("Login Failed.")
@@ -145,12 +147,17 @@ export const connectWS = () => {
     socket.onclose = () => {
         console.log('Connection closed!');
 
-        if (!isUserLogout) {
-            console.log("Disconnected");
-            alert("Mất kết nối server! Vui lòng nhấn refresh.");
+        if (isUserLogout) {
+            logoutWS();
         }
+        console.log("Disconnected");
+        if (reconnectAttempts >= MAX_RETRY) return;
+        reconnectTimer = setTimeout(() => {
+            console.log("🔄 Reconnecting socket...");
+            connectWS();
+        }, Math.min(3000 * reconnectAttempts, 15000));
+        // alert("Mất kết nối server! Vui lòng nhấn refresh.");
 
-        logoutWS();
     }
 
     socket.onerror = (e) => {
