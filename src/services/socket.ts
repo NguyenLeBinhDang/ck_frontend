@@ -153,7 +153,7 @@ export const connectWS = () => {
         console.log("Disconnected");
         if (reconnectAttempts >= MAX_RETRY) return;
         reconnectTimer = setTimeout(() => {
-            console.log("🔄 Reconnecting socket...");
+            console.log("Reconnecting socket...");
             connectWS();
         }, Math.min(3000 * reconnectAttempts, 15000));
         // alert("Mất kết nối server! Vui lòng nhấn refresh.");
